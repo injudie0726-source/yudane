@@ -8,7 +8,7 @@
 - [x] OGP メタタグ追加
 - [x] favicon / apple-touch-icon 作成・設定
 - [x] PWA manifest.json 作成
-- [x] Netlify にデプロイ
+- [x] Netlify にデプロイ（GitHub連携で自動化済み）
 - [ ] Google Analytics 導入 ← 次
 
 ## Phase 1: バイラル装置
