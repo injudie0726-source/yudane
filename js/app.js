@@ -229,6 +229,7 @@ class ShareImageGenerator {
         this.drawParticles(rarity);
         this.drawText(message, rarity);
         this.drawBranding();
+        this.drawFrame(rarity); // レアリティ別フレーム
         return this.canvas.toDataURL('image/png');
     }
 
@@ -453,6 +454,89 @@ class ShareImageGenerator {
         ctx.font = '300 14px "Zen Kaku Gothic New", sans-serif';
         ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
         ctx.fillText('#YUDANE', w / 2, h - 35);
+    }
+
+    /**
+     * Draw rarity-based frame
+     * @param {{ name: string }} rarity - Rarity object
+     */
+    drawFrame(rarity) {
+        const ctx = this.ctx;
+        const w = this.width;
+        const h = this.height;
+
+        // N: フレームなし
+        if (rarity.name === 'N') return;
+
+        const frameStyles = {
+            R: { color: 'rgba(0, 229, 255, 0.4)', width: 2, glow: 0 },
+            SR: { color: 'rgba(199, 125, 255, 0.6)', width: 3, glow: 10 },
+            SSR: { color: 'rgba(255, 215, 0, 0.8)', width: 4, glow: 20 }
+        };
+
+        const style = frameStyles[rarity.name];
+        if (!style) return;
+
+        const margin = 20;
+
+        // グロー効果
+        if (style.glow > 0) {
+            ctx.shadowColor = style.color;
+            ctx.shadowBlur = style.glow;
+        }
+
+        ctx.strokeStyle = style.color;
+        ctx.lineWidth = style.width;
+        ctx.beginPath();
+        ctx.roundRect(margin, margin, w - margin * 2, h - margin * 2, 12);
+        ctx.stroke();
+
+        // SSR: 二重フレーム + コーナーエフェクト
+        if (rarity.name === 'SSR') {
+            // 内側フレーム
+            ctx.strokeStyle = 'rgba(255, 215, 0, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.roundRect(margin + 8, margin + 8, w - (margin + 8) * 2, h - (margin + 8) * 2, 8);
+            ctx.stroke();
+
+            // コーナーのダイヤモンドエフェクト
+            const corners = [
+                { x: margin + 12, y: margin + 12 },
+                { x: w - margin - 12, y: margin + 12 },
+                { x: margin + 12, y: h - margin - 12 },
+                { x: w - margin - 12, y: h - margin - 12 }
+            ];
+
+            corners.forEach(corner => {
+                ctx.save();
+                ctx.translate(corner.x, corner.y);
+                ctx.rotate(Math.PI / 4);
+                ctx.fillStyle = 'rgba(255, 215, 0, 0.9)';
+                ctx.fillRect(-4, -4, 8, 8);
+                ctx.restore();
+            });
+        }
+
+        // SR: コーナーアクセント
+        if (rarity.name === 'SR') {
+            const cornerSize = 30;
+            ctx.strokeStyle = 'rgba(199, 125, 255, 0.8)';
+            ctx.lineWidth = 2;
+
+            // 四隅にL字アクセント
+            [[margin, margin, 1, 1], [w - margin, margin, -1, 1],
+            [margin, h - margin, 1, -1], [w - margin, h - margin, -1, -1]].forEach(([x, y, dx, dy]) => {
+                ctx.beginPath();
+                ctx.moveTo(x, y + dy * cornerSize);
+                ctx.lineTo(x, y);
+                ctx.lineTo(x + dx * cornerSize, y);
+                ctx.stroke();
+            });
+        }
+
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
     }
 
     /**
