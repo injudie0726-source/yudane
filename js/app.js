@@ -20,7 +20,33 @@ const TIMING = {
 // ========================================
 const STORAGE = {
     RITUAL: 'yudane_ritual',
+    BELIEVER: 'yudane_believer',
     PWA_DISMISSED: 'pwa-dismissed'
+};
+
+// ========================================
+// Believer System Constants
+// ========================================
+const BELIEVER = {
+    BASE_ID: 10000, // 信者番号の基準値
+    EXP_PER_VISIT: 10,
+    EXP_PER_SSR: 50,
+    EXP_PER_SR: 20,
+    EXP_PER_R: 5,
+    TITLES: [
+        { level: 1, name: '入信者' },
+        { level: 5, name: '信徒' },
+        { level: 10, name: '修行者' },
+        { level: 20, name: '求道者' },
+        { level: 30, name: '帰依者' },
+        { level: 50, name: '覚醒者' },
+        { level: 100, name: '悟達者' }
+    ],
+    STREAK_BONUS: {
+        3: 'R',    // 3日連続でR確定
+        7: 'SR',   // 7日連続でSR確定
+        30: 'SSR'  // 30日連続でSSR確定
+    }
 };
 
 // ========================================
@@ -722,10 +748,18 @@ const RARITY = {
 };
 
 /**
- * Draw rarity based on probability
+ * Draw rarity based on probability (with streak bonus)
+ * @param {number} streak - 連続参拝日数
  * @returns {{ name: string, label: string, probability: number }}
  */
-function drawRarity() {
+function drawRarity(streak = 0) {
+    // ストリークボーナス確認
+    const bonus = getStreakBonus(streak);
+    if (bonus) {
+        return RARITY[bonus];
+    }
+
+    // 通常抽選
     const rand = Math.random();
     let cumulative = 0;
     if (rand < (cumulative += RARITY.SSR.probability)) return RARITY.SSR;
@@ -787,6 +821,180 @@ function loadRitual() {
     return null;
 }
 
+// ========================================
+// 8. Believer System Functions
+// ========================================
+
+/**
+ * 信者データの読み込み
+ */
+function loadBeliever() {
+    try {
+        const data = localStorage.getItem(STORAGE.BELIEVER);
+        return data ? JSON.parse(data) : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+/**
+ * 信者データの保存
+ */
+function saveBeliever(believer) {
+    localStorage.setItem(STORAGE.BELIEVER, JSON.stringify(believer));
+}
+
+/**
+ * 信者の初期化（初回訪問時）
+ */
+function initBeliever() {
+    let believer = loadBeliever();
+
+    if (!believer) {
+        // 新規信者を生成
+        const id = BELIEVER.BASE_ID + Math.floor(Math.random() * 90000);
+        believer = {
+            id: id,
+            createdAt: getTodayDate(),
+            level: 1,
+            exp: 0,
+            streak: 0,
+            lastVisit: null,
+            totalVisits: 0,
+            ssrCount: 0,
+            srCount: 0,
+            rCount: 0
+        };
+        saveBeliever(believer);
+    }
+
+    return believer;
+}
+
+/**
+ * 連続参拝日数の更新
+ */
+function updateStreak(believer) {
+    const today = getTodayDate();
+    const yesterday = getYesterdayDate();
+
+    if (believer.lastVisit === today) {
+        // 今日既に参拝済み
+        return believer;
+    }
+
+    if (believer.lastVisit === yesterday) {
+        // 昨日参拝した → 連続
+        believer.streak++;
+    } else if (believer.lastVisit !== null) {
+        // 連続が途切れた
+        believer.streak = 1;
+    } else {
+        // 初回参拝
+        believer.streak = 1;
+    }
+
+    believer.lastVisit = today;
+    believer.totalVisits++;
+
+    return believer;
+}
+
+/**
+ * 昨日の日付を取得
+ */
+function getYesterdayDate() {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return d.toISOString().split('T')[0];
+}
+
+/**
+ * 経験値追加とレベルアップ判定
+ */
+function addExp(believer, amount) {
+    believer.exp += amount;
+
+    // レベルアップ判定
+    const requiredExp = believer.level * 100;
+    while (believer.exp >= requiredExp) {
+        believer.exp -= requiredExp;
+        believer.level++;
+    }
+
+    return believer;
+}
+
+/**
+ * レベルに応じた称号を取得
+ */
+function getTitle(level) {
+    let title = BELIEVER.TITLES[0].name;
+    for (const t of BELIEVER.TITLES) {
+        if (level >= t.level) {
+            title = t.name;
+        }
+    }
+    return title;
+}
+
+/**
+ * ストリークボーナスの取得
+ */
+function getStreakBonus(streak) {
+    if (streak >= 30) return 'SSR';
+    if (streak >= 7) return 'SR';
+    if (streak >= 3) return 'R';
+    return null;
+}
+
+/**
+ * 儀式完了時の信者データ更新
+ */
+function onRitualComplete(believer, rarity) {
+    // レアリティに応じた経験値
+    let exp = BELIEVER.EXP_PER_VISIT;
+
+    switch (rarity.name) {
+        case 'SSR':
+            exp += BELIEVER.EXP_PER_SSR;
+            believer.ssrCount++;
+            break;
+        case 'SR':
+            exp += BELIEVER.EXP_PER_SR;
+            believer.srCount++;
+            break;
+        case 'R':
+            exp += BELIEVER.EXP_PER_R;
+            believer.rCount++;
+            break;
+    }
+
+    believer = addExp(believer, exp);
+    saveBeliever(believer);
+
+    return believer;
+}
+
+/**
+ * 信者数のシミュレーション（フェイク）
+ */
+function getBelieverCount() {
+    const baseCount = 24847;
+    const daysSinceStart = Math.floor((Date.now() - new Date('2026-01-01').getTime()) / 86400000);
+    const dailyGrowth = Math.floor(Math.random() * 50) + 30;
+    return baseCount + (daysSinceStart * dailyGrowth);
+}
+
+/**
+ * 本日の参拝者数のシミュレーション（フェイク）
+ */
+function getTodayVisitors() {
+    const hour = new Date().getHours();
+    const base = 200 + (hour * 50);
+    return base + Math.floor(Math.random() * 100);
+}
+
 function getTimeUntilMidnight() {
     const now = new Date();
     const midnight = new Date(now);
@@ -823,7 +1031,21 @@ class YudaneApp {
             ssrFlash: document.getElementById('ssr-flash'),
             installPrompt: document.getElementById('install-prompt'),
             installBtn: document.getElementById('install-btn'),
-            installClose: document.getElementById('install-close')
+            installClose: document.getElementById('install-close'),
+            // Believer Profile Elements
+            profileBtn: document.getElementById('profile-btn'),
+            profileModal: document.getElementById('profile-modal'),
+            profileClose: document.getElementById('profile-close'),
+            believerNumber: document.getElementById('believer-number'),
+            levelValue: document.getElementById('level-value'),
+            expFill: document.getElementById('exp-fill'),
+            expText: document.getElementById('exp-text'),
+            streakValue: document.getElementById('streak-value'),
+            ssrCount: document.getElementById('ssr-count'),
+            srCount: document.getElementById('sr-count'),
+            titleValue: document.getElementById('title-value'),
+            totalBelievers: document.getElementById('total-believers'),
+            todayVisitors: document.getElementById('today-visitors')
         };
 
         // State
@@ -839,7 +1061,8 @@ class YudaneApp {
             canvasHeight: 0,
             currentRitual: null,
             countdownInterval: null,
-            deferredPrompt: null
+            deferredPrompt: null,
+            believer: null  // 信者データ
         };
 
         // Effects
@@ -889,6 +1112,19 @@ class YudaneApp {
             this.elements.installClose.addEventListener('click', () => this.dismissInstallPrompt());
         }
 
+        // Believer Profile Events
+        if (this.elements.profileBtn) {
+            this.elements.profileBtn.addEventListener('click', () => this.openProfile());
+        }
+        if (this.elements.profileClose) {
+            this.elements.profileClose.addEventListener('click', () => this.closeProfile());
+        }
+        if (this.elements.profileModal) {
+            this.elements.profileModal.addEventListener('click', (e) => {
+                if (e.target === this.elements.profileModal) this.closeProfile();
+            });
+        }
+
         window.addEventListener('beforeinstallprompt', (e) => this.handleInstallPrompt(e));
         window.addEventListener('appinstalled', () => this.handleAppInstalled());
     }
@@ -896,6 +1132,9 @@ class YudaneApp {
     async init() {
         this.marineSnow = new MarineSnow(document.getElementById('marine-snow-canvas'));
         this.ssrExplosion = new SSRParticleExplosion(document.getElementById('ssr-particles-canvas'));
+
+        // 信者システム初期化
+        this.state.believer = initBeliever();
 
         const saved = loadRitual();
 
@@ -916,6 +1155,9 @@ class YudaneApp {
             this.elements.yudaneBtn.disabled = false;
         }
 
+        // 信者数カウンター更新
+        this.updateBelieverCounter();
+
         this.registerServiceWorker();
     }
 
@@ -929,22 +1171,31 @@ class YudaneApp {
         this.elements.buttonContainer.classList.add('hidden');
         this.elements.title.classList.add('fade');
 
+        // ストリーク更新
+        this.state.believer = updateStreak(this.state.believer);
+        const streak = this.state.believer.streak;
+
         this.state.engine.gravity.y = this.config.gravityStrength;
         this.state.anxietyBodies.forEach(body => {
             Matter.Body.applyForce(body, body.position, { x: 0, y: 0.04 });
         });
 
         setTimeout(() => {
-            const rarity = drawRarity();
+            // ストリークボーナスを渡してレアリティ抽選
+            const rarity = drawRarity(streak);
             const message = generateOracle(rarity);
             saveRitual(message, rarity);
             this.state.currentRitual = { message, rarity };
+
+            // 信者データ更新（経験値等）
+            this.state.believer = onRitualComplete(this.state.believer, rarity);
 
             // GA4: レアリティイベント送信
             if (typeof gtag === 'function') {
                 gtag('event', 'oracle_revealed', {
                     rarity: rarity.name,
-                    rarity_label: rarity.label
+                    rarity_label: rarity.label,
+                    streak: streak
                 });
             }
 
@@ -1073,6 +1324,56 @@ class YudaneApp {
 
         osc.start(ctx.currentTime + delay);
         osc.stop(ctx.currentTime + delay + duration + 0.1);
+    }
+
+    // ========================================
+    // Believer Profile Methods
+    // ========================================
+
+    openProfile() {
+        this.updateProfileCard();
+        this.elements.profileModal.classList.remove('hidden');
+        this.elements.profileModal.classList.add('visible');
+    }
+
+    closeProfile() {
+        this.elements.profileModal.classList.remove('visible');
+        this.elements.profileModal.classList.add('hidden');
+    }
+
+    updateProfileCard() {
+        const b = this.state.believer;
+        if (!b) return;
+
+        // 信者番号
+        this.elements.believerNumber.textContent = String(b.id).padStart(5, '0');
+
+        // レベル
+        this.elements.levelValue.textContent = b.level;
+
+        // EXPバー
+        const requiredExp = b.level * 100;
+        const expPercent = (b.exp / requiredExp) * 100;
+        this.elements.expFill.style.width = `${expPercent}%`;
+        this.elements.expText.textContent = `${b.exp}/${requiredExp}`;
+
+        // ストリーク
+        this.elements.streakValue.textContent = b.streak;
+
+        // 統計
+        this.elements.ssrCount.textContent = b.ssrCount;
+        this.elements.srCount.textContent = b.srCount;
+
+        // 称号
+        this.elements.titleValue.textContent = getTitle(b.level);
+    }
+
+    updateBelieverCounter() {
+        const total = getBelieverCount();
+        const today = getTodayVisitors();
+
+        this.elements.totalBelievers.textContent = total.toLocaleString();
+        this.elements.todayVisitors.textContent = today.toLocaleString();
     }
 
     startCountdown() {

@@ -74,6 +74,38 @@
             <p>Digital Religion for Gen-Z</p>
         </div>
 
+        <!-- Believer Profile Icon -->
+        <button id="profile-btn" aria-label="信者プロフィール">🙏</button>
+
+        <!-- Believer Profile Card Modal -->
+        <div id="profile-modal" class="hidden">
+            <div id="profile-card">
+                <button id="profile-close" aria-label="閉じる">×</button>
+                <h2>信者証</h2>
+                <div id="believer-id">信者番号: #<span id="believer-number">-----</span></div>
+                <div id="believer-level">信仰レベル: Lv.<span id="level-value">1</span></div>
+                <div id="believer-exp">
+                    <div id="exp-bar">
+                        <div id="exp-fill"></div>
+                    </div>
+                    <span id="exp-text">0/100</span>
+                </div>
+                <div id="believer-streak">連続参拝: <span id="streak-value">0</span>日 🔥</div>
+                <div id="believer-stats">
+                    <span>SSR: <span id="ssr-count">0</span>回</span>
+                    <span>SR: <span id="sr-count">0</span>回</span>
+                </div>
+                <div id="believer-title">称号: 「<span id="title-value">入信者</span>」</div>
+                <a href="/doctrine.html" id="doctrine-link">📖 YUDANEの教え</a>
+            </div>
+        </div>
+
+        <!-- Believer Counter -->
+        <div id="believer-counter">
+            <span>現在の信者: <span id="total-believers">--,---</span>人</span>
+            <span>本日の参拝者: <span id="today-visitors">---</span>人</span>
+        </div>
+
         <!-- Main Button -->
         <div id="button-container">
             <p id="empathy-copy">今日も、おつかれ。</p>

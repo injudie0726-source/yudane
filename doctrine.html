@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>YUDANEの教え - 7つの戒律</title>
+    <meta name="description" content="YUDANEの7つの教え - 完全なる委任のための戒律">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+
+    <style>
+        /* Doctrine Page Specific Styles */
+        body {
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .doctrine-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .doctrine-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .doctrine-header h1 {
+            font-family: 'Shippori Mincho', serif;
+            font-size: 2rem;
+            color: var(--gold);
+            letter-spacing: 0.3em;
+            margin-bottom: 16px;
+        }
+
+        .doctrine-header p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .teaching {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 32px 24px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .teaching::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--cyan), var(--purple));
+        }
+
+        .teaching-number {
+            font-family: 'Shippori Mincho', serif;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            letter-spacing: 0.2em;
+            margin-bottom: 12px;
+        }
+
+        .teaching-text {
+            font-family: 'Shippori Mincho', serif;
+            font-size: 1.3rem;
+            color: var(--text-primary);
+            line-height: 1.8;
+        }
+
+        .teaching-desc {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 16px;
+            line-height: 1.7;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 40px;
+            padding: 16px 32px;
+            background: linear-gradient(90deg, var(--install-btn-start), var(--install-btn-end));
+            color: white;
+            text-decoration: none;
+            border-radius: 28px;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(102, 126, 234, 0.4);
+        }
+
+        .footer-text {
+            text-align: center;
+            margin-top: 60px;
+            font-family: 'Shippori Mincho', serif;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            line-height: 2;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div id="background-layer"></div>
+        <canvas id="marine-snow-canvas"></canvas>
+
+        <div class="doctrine-container">
+            <header class="doctrine-header">
+                <h1>YUDANEの教え</h1>
+                <p>― 完全なる委任のための7つの戒律 ―</p>
+            </header>
+
+            <article class="teaching">
+                <div class="teaching-number">第一の教え</div>
+                <div class="teaching-text">無理はしなくていい</div>
+                <p class="teaching-desc">限界を超える必要はない。あなたの心身は、あなただけのもの。</p>
+            </article>
+
+            <article class="teaching">
+                <div class="teaching-number">第二の教え</div>
+                <div class="teaching-text">頑張らなくてもいい</div>
+                <p class="teaching-desc">努力は美徳ではない。ただ存在するだけで、あなたには価値がある。</p>
+            </article>
+
+            <article class="teaching">
+                <div class="teaching-number">第三の教え</div>
+                <div class="teaching-text">自分を責めなくていい</div>
+                <p class="teaching-desc">過去の選択は、その時のあなたの最善だった。</p>
+            </article>
+
+            <article class="teaching">
+                <div class="teaching-number">第四の教え</div>
+                <div class="teaching-text">完璧じゃなくていい</div>
+                <p class="teaching-desc">不完全さこそが、人間らしさの証。</p>
+            </article>
+
+            <article class="teaching">
+                <div class="teaching-number">第五の教え</div>
+                <div class="teaching-text">誰かに認められなくてもいい</div>
+                <p class="teaching-desc">他者の評価は、あなたの本質を定義しない。</p>
+            </article>
+
+            <article class="teaching">
+                <div class="teaching-number">第六の教え</div>
+                <div class="teaching-text">今日できなくてもいい</div>
+                <p class="teaching-desc">明日も、明後日も、時間はある。焦る必要はない。</p>
+            </article>
+
+            <article class="teaching">
+                <div class="teaching-number">第七の教え</div>
+                <div class="teaching-text">全てを委ねていい</div>
+                <p class="teaching-desc">コントロールを手放すことは、敗北ではない。それは解放。</p>
+            </article>
+
+            <div style="text-align: center;">
+                <a href="/" class="back-link">🙏 儀式に戻る</a>
+            </div>
+
+            <footer class="footer-text">
+                YUDANE ― Digital Religion for Gen-Z<br>
+                全てを委ね、安らぎを得よ
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        // Simple marine snow for this page
+        const canvas = document.getElementById('marine-snow-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function init() {
+            resize();
+            particles = Array.from({ length: 50 }, () => ({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                r: Math.random() * 2 + 0.5,
+                vx: (Math.random() - 0.5) * 0.3,
+                vy: Math.random() * 0.5 + 0.2,
+                alpha: Math.random() * 0.4 + 0.1
+            }));
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+
+                if (p.y > canvas.height) {
+                    p.y = -10;
+                    p.x = Math.random() * canvas.width;
+                }
+                if (p.x < 0) p.x = canvas.width;
+                if (p.x > canvas.width) p.x = 0;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
+                ctx.fill();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', resize);
+        init();
+        animate();
+    </script>
+</body>
+
+</html>

@@ -981,3 +981,256 @@ body.screen-shake {
         line-height: 2;
     }
 }
+
+/* ========================================
+   12. Believer Profile System
+   ======================================== */
+
+/* Profile Button */
+#profile-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    font-size: 1.5rem;
+    cursor: pointer;
+    z-index: 200;
+    transition: all var(--transition-normal);
+    backdrop-filter: blur(10px);
+}
+
+#profile-btn:hover {
+    background: var(--glass-highlight);
+    transform: scale(1.1);
+}
+
+/* Profile Modal Overlay */
+#profile-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all var(--transition-normal);
+}
+
+#profile-modal.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+#profile-modal.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* Profile Card */
+#profile-card {
+    position: relative;
+    width: 320px;
+    padding: 32px 28px;
+    background: linear-gradient(145deg, rgba(10, 31, 58, 0.95), rgba(4, 18, 37, 0.98));
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transform: scale(0.9);
+    transition: transform var(--transition-normal);
+}
+
+#profile-modal.visible #profile-card {
+    transform: scale(1);
+}
+
+#profile-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: color var(--transition-fast);
+}
+
+#profile-close:hover {
+    color: var(--text-primary);
+}
+
+#profile-card h2 {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 1.5rem;
+    color: var(--gold);
+    margin-bottom: 24px;
+    letter-spacing: 0.3em;
+}
+
+#believer-id {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+}
+
+#believer-number {
+    color: var(--cyan);
+    font-weight: 600;
+}
+
+#believer-level {
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+#level-value {
+    color: var(--gold);
+    font-weight: 700;
+}
+
+/* EXP Bar */
+#believer-exp {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+#exp-bar {
+    flex: 1;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+#exp-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--cyan), var(--purple));
+    border-radius: 4px;
+    transition: width var(--transition-slow);
+}
+
+#exp-text {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    min-width: 50px;
+}
+
+/* Streak */
+#believer-streak {
+    font-size: 1rem;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+}
+
+#streak-value {
+    color: #ff6b6b;
+    font-weight: 700;
+}
+
+/* Stats */
+#believer-stats {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-bottom: 20px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+#ssr-count {
+    color: var(--gold);
+}
+
+#sr-count {
+    color: var(--purple);
+}
+
+/* Title */
+#believer-title {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 1rem;
+    color: var(--text-primary);
+    margin-bottom: 24px;
+}
+
+#title-value {
+    color: var(--gold);
+}
+
+/* Doctrine Link */
+#doctrine-link {
+    display: inline-block;
+    padding: 12px 24px;
+    background: linear-gradient(90deg, var(--install-btn-start), var(--install-btn-end));
+    color: white;
+    text-decoration: none;
+    border-radius: 24px;
+    font-size: 0.9rem;
+    transition: all var(--transition-fast);
+}
+
+#doctrine-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+}
+
+/* Believer Counter */
+#believer-counter {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 24px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    z-index: 50;
+    opacity: 0.7;
+}
+
+#total-believers,
+#today-visitors {
+    color: var(--cyan);
+}
+
+/* Mobile adjustments */
+@media (max-width: 480px) {
+    #profile-btn {
+        top: 12px;
+        right: 12px;
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+
+    #profile-card {
+        width: 290px;
+        padding: 24px 20px;
+    }
+
+    #believer-counter {
+        flex-direction: column;
+        gap: 4px;
+        text-align: center;
+        bottom: 70px;
+    }
+}
