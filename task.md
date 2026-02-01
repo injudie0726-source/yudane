@@ -9,11 +9,11 @@
 - [x] favicon / apple-touch-icon 作成・設定
 - [x] PWA manifest.json 作成
 - [x] Netlify にデプロイ（GitHub連携で自動化済み）
-- [ ] Google Analytics 導入 ← 次
+- [x] Google Analytics 導入（G-9NQ31LK1BP）
 
-## Phase 1: バイラル装置
+## Phase 1: バイラル装置 ← 進行中
 
-- [ ] シェア画像生成機能（html2canvas）
+- [/] シェア画像生成機能（html2canvas）
 - [ ] SSR専用シェア演出
 - [ ] PWA完全対応
 - [ ] ローンチ告知

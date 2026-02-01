@@ -575,24 +575,50 @@
             z-index: 999;
         }
 
-        /* シェアボタン */
-        #share-btn {
-            margin-top: 36px;
-            padding: 14px 32px;
+        /* シェアボタンエリア */
+        #share-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 32px;
+            flex-wrap: wrap;
+        }
+
+        #share-buttons button {
+            padding: 12px 24px;
             font-family: 'Zen Kaku Gothic New', sans-serif;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 400;
-            letter-spacing: 0.15em;
+            letter-spacing: 0.1em;
             color: white;
-            background: linear-gradient(135deg, rgba(29, 161, 242, 0.9) 0%, rgba(13, 142, 207, 0.9) 100%);
             border: none;
             border-radius: 30px;
             cursor: pointer;
             transition: all 0.3s ease;
             display: inline-flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             backdrop-filter: blur(8px);
+        }
+
+        #download-btn {
+            background: linear-gradient(135deg, rgba(100, 120, 150, 0.8) 0%, rgba(70, 90, 120, 0.8) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        #download-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 24px rgba(100, 140, 180, 0.3);
+        }
+
+        #download-btn svg {
+            width: 16px;
+            height: 16px;
+            stroke: white;
+        }
+
+        #share-btn {
+            background: linear-gradient(135deg, rgba(29, 161, 242, 0.9) 0%, rgba(13, 142, 207, 0.9) 100%);
         }
 
         #share-btn:hover {
@@ -601,8 +627,8 @@
         }
 
         #share-btn svg {
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
             fill: white;
         }
 
@@ -713,14 +739,25 @@
             <div id="oracle-label">AI Oracle — 今日の啓示</div>
             <div id="rarity-badge">NORMAL</div>
             <div id="oracle-message"></div>
-            <button id="share-btn">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                        d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                </svg>
-                #YUDANE をシェア
-            </button>
+            <div id="share-buttons">
+                <button id="download-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                    </svg>
+                    画像を保存
+                </button>
+                <button id="share-btn">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                    </svg>
+                    シェア
+                </button>
+            </div>
         </div>
+
+        <!-- シェア画像生成用Canvas（非表示） -->
+        <canvas id="share-canvas" width="1200" height="675" style="display:none;"></canvas>
 
         <!-- カウントダウン -->
         <div id="next-ritual">次の儀式まで<span id="countdown">--:--:--</span></div>
@@ -934,6 +971,289 @@
         }
 
         // ========================================
+        // 3. シェア画像生成エンジン
+        // ========================================
+
+        class ShareImageGenerator {
+            constructor() {
+                this.canvas = document.getElementById('share-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.width = 1200;
+                this.height = 675;
+            }
+
+            generate(message, rarity) {
+                const ctx = this.ctx;
+                const w = this.width;
+                const h = this.height;
+
+                // 背景グラデーション（レアリティ別）
+                this.drawBackground(rarity);
+
+                // マリンスノー風パーティクル
+                this.drawParticles(rarity);
+
+                // テキスト描画
+                this.drawText(message, rarity);
+
+                // ロゴ・日付・URL
+                this.drawBranding();
+
+                return this.canvas.toDataURL('image/png');
+            }
+
+            drawBackground(rarity) {
+                const ctx = this.ctx;
+                const w = this.width;
+                const h = this.height;
+
+                // ベースグラデーション
+                const baseColors = {
+                    N: ['#010610', '#041225', '#0a1f3a'],
+                    R: ['#010815', '#032035', '#0a3050'],
+                    SR: ['#0a0618', '#1a1035', '#2a1850'],
+                    SSR: ['#0a0608', '#1a1020', '#2a1a30']
+                };
+
+                const colors = baseColors[rarity.name] || baseColors.N;
+                const gradient = ctx.createLinearGradient(0, 0, 0, h);
+                gradient.addColorStop(0, colors[0]);
+                gradient.addColorStop(0.5, colors[1]);
+                gradient.addColorStop(1, colors[2]);
+
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, w, h);
+
+                // 環境光（ぼんやりした光源）
+                const lightColors = {
+                    N: 'rgba(100, 150, 200, 0.08)',
+                    R: 'rgba(0, 229, 255, 0.12)',
+                    SR: 'rgba(199, 125, 255, 0.15)',
+                    SSR: 'rgba(255, 215, 0, 0.2)'
+                };
+
+                const lightGrad = ctx.createRadialGradient(w * 0.3, h * 0.2, 0, w * 0.3, h * 0.2, 400);
+                lightGrad.addColorStop(0, lightColors[rarity.name] || lightColors.N);
+                lightGrad.addColorStop(1, 'transparent');
+                ctx.fillStyle = lightGrad;
+                ctx.fillRect(0, 0, w, h);
+
+                // SSR: 追加のゴールデングロー
+                if (rarity.name === 'SSR') {
+                    const goldGlow = ctx.createRadialGradient(w * 0.5, h * 0.4, 0, w * 0.5, h * 0.4, 350);
+                    goldGlow.addColorStop(0, 'rgba(255, 215, 0, 0.15)');
+                    goldGlow.addColorStop(0.5, 'rgba(255, 165, 0, 0.08)');
+                    goldGlow.addColorStop(1, 'transparent');
+                    ctx.fillStyle = goldGlow;
+                    ctx.fillRect(0, 0, w, h);
+                }
+            }
+
+            drawParticles(rarity) {
+                const ctx = this.ctx;
+                const w = this.width;
+                const h = this.height;
+
+                const particleCount = rarity.name === 'SSR' ? 60 : rarity.name === 'SR' ? 40 : 25;
+                const particleColors = {
+                    N: 'rgba(200, 220, 255, 0.3)',
+                    R: 'rgba(0, 229, 255, 0.4)',
+                    SR: 'rgba(199, 125, 255, 0.5)',
+                    SSR: 'rgba(255, 215, 0, 0.6)'
+                };
+
+                for (let i = 0; i < particleCount; i++) {
+                    const x = Math.random() * w;
+                    const y = Math.random() * h;
+                    const size = Math.random() * 3 + 1;
+                    const alpha = Math.random() * 0.5 + 0.2;
+
+                    ctx.beginPath();
+                    ctx.arc(x, y, size, 0, Math.PI * 2);
+                    ctx.fillStyle = particleColors[rarity.name] || particleColors.N;
+                    ctx.globalAlpha = alpha;
+                    ctx.fill();
+
+                    // グロー
+                    if (size > 2) {
+                        ctx.beginPath();
+                        ctx.arc(x, y, size * 3, 0, Math.PI * 2);
+                        ctx.fillStyle = particleColors[rarity.name] || particleColors.N;
+                        ctx.globalAlpha = alpha * 0.2;
+                        ctx.fill();
+                    }
+                }
+
+                // SSR: スパークル追加
+                if (rarity.name === 'SSR') {
+                    for (let i = 0; i < 15; i++) {
+                        const x = Math.random() * w;
+                        const y = Math.random() * h;
+                        this.drawSparkle(x, y, Math.random() * 8 + 4);
+                    }
+                }
+
+                ctx.globalAlpha = 1;
+            }
+
+            drawSparkle(x, y, size) {
+                const ctx = this.ctx;
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.beginPath();
+                for (let i = 0; i < 4; i++) {
+                    const angle = (i / 4) * Math.PI * 2;
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(Math.cos(angle) * size, Math.sin(angle) * size);
+                }
+                ctx.strokeStyle = 'rgba(255, 255, 200, 0.8)';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            drawText(message, rarity) {
+                const ctx = this.ctx;
+                const w = this.width;
+                const h = this.height;
+
+                // レアリティバッジ
+                const badgeY = 180;
+                ctx.font = '600 20px "Zen Kaku Gothic New", sans-serif';
+                ctx.textAlign = 'center';
+
+                const badgeColors = {
+                    N: { bg: 'rgba(255, 255, 255, 0.08)', text: 'rgba(255, 255, 255, 0.5)', border: 'rgba(255, 255, 255, 0.1)' },
+                    R: { bg: 'rgba(0, 229, 255, 0.15)', text: '#00e5ff', border: 'rgba(0, 229, 255, 0.4)' },
+                    SR: { bg: 'rgba(199, 125, 255, 0.2)', text: '#c77dff', border: 'rgba(199, 125, 255, 0.5)' },
+                    SSR: { bg: 'rgba(255, 215, 0, 0.25)', text: '#ffd700', border: 'rgba(255, 215, 0, 0.6)' }
+                };
+
+                const badge = badgeColors[rarity.name] || badgeColors.N;
+                const badgeText = rarity.label;
+                const badgeWidth = ctx.measureText(badgeText).width + 40;
+
+                // バッジ背景
+                ctx.fillStyle = badge.bg;
+                ctx.strokeStyle = badge.border;
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.roundRect(w / 2 - badgeWidth / 2, badgeY - 15, badgeWidth, 36, 18);
+                ctx.fill();
+                ctx.stroke();
+
+                // バッジテキスト
+                ctx.fillStyle = badge.text;
+                ctx.fillText(badgeText, w / 2, badgeY + 7);
+
+                // メッセージ本文
+                const messageY = h * 0.5;
+                ctx.font = '500 36px "Shippori Mincho", serif';
+
+                const textColors = {
+                    N: 'rgba(255, 255, 255, 0.92)',
+                    R: '#b0f0ff',
+                    SR: '#dcc0ff',
+                    SSR: '#ffd700'
+                };
+
+                const textShadows = {
+                    N: 'rgba(100, 150, 200, 0.3)',
+                    R: 'rgba(0, 229, 255, 0.5)',
+                    SR: 'rgba(199, 125, 255, 0.6)',
+                    SSR: 'rgba(255, 215, 0, 0.8)'
+                };
+
+                // テキストシャドウ
+                ctx.shadowColor = textShadows[rarity.name] || textShadows.N;
+                ctx.shadowBlur = rarity.name === 'SSR' ? 40 : 20;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+
+                ctx.fillStyle = textColors[rarity.name] || textColors.N;
+
+                // 折り返し処理
+                const maxWidth = w - 160;
+                const lines = this.wrapText(message, maxWidth, ctx);
+                const lineHeight = 56;
+                const startY = messageY - ((lines.length - 1) * lineHeight) / 2;
+
+                lines.forEach((line, i) => {
+                    ctx.fillText(line, w / 2, startY + i * lineHeight);
+                });
+
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+            }
+
+            wrapText(text, maxWidth, ctx) {
+                const words = text.split('');
+                const lines = [];
+                let currentLine = '';
+
+                for (const char of words) {
+                    const testLine = currentLine + char;
+                    const width = ctx.measureText(testLine).width;
+
+                    if (width > maxWidth && currentLine) {
+                        lines.push(currentLine);
+                        currentLine = char;
+                    } else {
+                        currentLine = testLine;
+                    }
+                }
+
+                if (currentLine) {
+                    lines.push(currentLine);
+                }
+
+                return lines;
+            }
+
+            drawBranding() {
+                const ctx = this.ctx;
+                const w = this.width;
+                const h = this.height;
+
+                // ヘッダー: YUDANE
+                ctx.font = '400 48px "Shippori Mincho", serif';
+                ctx.textAlign = 'center';
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.letterSpacing = '0.5em';
+                ctx.fillText('Y U D A N E', w / 2, 80);
+
+                // サブタイトル
+                ctx.font = '300 14px "Zen Kaku Gothic New", sans-serif';
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                ctx.fillText('DIGITAL RELIGION FOR GEN-Z', w / 2, 110);
+
+                // フッター: 日付
+                const today = new Date();
+                const dateStr = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')}`;
+
+                ctx.font = '300 16px "Zen Kaku Gothic New", sans-serif';
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+                ctx.fillText(dateStr, w / 2, h - 60);
+
+                // URL
+                ctx.font = '300 14px "Zen Kaku Gothic New", sans-serif';
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+                ctx.fillText('#YUDANE', w / 2, h - 35);
+            }
+
+            async download(message, rarity) {
+                // フォント読み込み待機
+                await document.fonts.ready;
+
+                const dataUrl = this.generate(message, rarity);
+                const link = document.createElement('a');
+                link.href = dataUrl;
+                link.download = `yudane_${Date.now()}.png`;
+                link.click();
+            }
+        }
+
+        // ========================================
         // 無限神託エンジン (The Lexicon Engine)
         // ========================================
 
@@ -1138,10 +1458,14 @@
         const oracleMessage = document.getElementById('oracle-message');
         const rarityBadge = document.getElementById('rarity-badge');
         const shareBtn = document.getElementById('share-btn');
+        const downloadBtn = document.getElementById('download-btn');
         const nextRitual = document.getElementById('next-ritual');
         const countdown = document.getElementById('countdown');
         const title = document.getElementById('title');
         const ssrFlash = document.getElementById('ssr-flash');
+
+        // シェア画像生成
+        let shareImageGenerator = null;
 
         // ========================================
         // ニュース取得
@@ -1404,6 +1728,16 @@
         // イベント
         yudaneBtn.addEventListener('click', releaseAnxiety);
         shareBtn.addEventListener('click', shareToX);
+        downloadBtn.addEventListener('click', downloadImage);
+
+        // 画像ダウンロード
+        async function downloadImage() {
+            if (!currentRitual) return;
+            if (!shareImageGenerator) {
+                shareImageGenerator = new ShareImageGenerator();
+            }
+            await shareImageGenerator.download(currentRitual.message, currentRitual.rarity);
+        }
 
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', init);
