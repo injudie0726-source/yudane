@@ -118,6 +118,100 @@ class MarineSnow {
 }
 
 // ========================================
+// 1.5 Sacred Geometry Background
+// ========================================
+class SacredGeometry {
+    constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.time = 0;
+        this.patterns = [];
+        this.resize();
+        this.init();
+        window.addEventListener('resize', () => this.resize());
+    }
+
+    resize() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        this.centerX = this.canvas.width / 2;
+        this.centerY = this.canvas.height / 2;
+    }
+
+    init() {
+        // 幾何学パターンのパラメータ
+        this.patterns = [
+            { radius: 150, sides: 6, rotation: 0, speed: 0.0003 },
+            { radius: 200, sides: 6, rotation: Math.PI / 6, speed: -0.0002 },
+            { radius: 250, sides: 12, rotation: 0, speed: 0.0001 },
+            { radius: 100, sides: 3, rotation: 0, speed: 0.0005 }
+        ];
+        this.animate();
+    }
+
+    drawPolygon(x, y, radius, sides, rotation) {
+        this.ctx.beginPath();
+        for (let i = 0; i <= sides; i++) {
+            const angle = (i / sides) * Math.PI * 2 + rotation;
+            const px = x + Math.cos(angle) * radius;
+            const py = y + Math.sin(angle) * radius;
+            if (i === 0) {
+                this.ctx.moveTo(px, py);
+            } else {
+                this.ctx.lineTo(px, py);
+            }
+        }
+        this.ctx.closePath();
+    }
+
+    drawFlowerOfLife(x, y, radius, count) {
+        for (let i = 0; i < count; i++) {
+            const angle = (i / count) * Math.PI * 2;
+            const cx = x + Math.cos(angle) * radius * 0.5;
+            const cy = y + Math.sin(angle) * radius * 0.5;
+            this.ctx.beginPath();
+            this.ctx.arc(cx, cy, radius * 0.5, 0, Math.PI * 2);
+            this.ctx.stroke();
+        }
+        // 中心円
+        this.ctx.beginPath();
+        this.ctx.arc(x, y, radius * 0.5, 0, Math.PI * 2);
+        this.ctx.stroke();
+    }
+
+    animate() {
+        this.time += 1;
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // ゆっくり呼吸するような透明度変化
+        const breathAlpha = 0.3 + Math.sin(this.time * 0.005) * 0.15;
+        this.ctx.strokeStyle = `rgba(100, 150, 200, ${breathAlpha})`;
+        this.ctx.lineWidth = 0.5;
+
+        // 幾何学パターン描画
+        this.patterns.forEach(p => {
+            p.rotation += p.speed;
+            this.drawPolygon(this.centerX, this.centerY, p.radius, p.sides, p.rotation);
+            this.ctx.stroke();
+        });
+
+        // Flower of Life（中心）
+        const flowerBreath = 80 + Math.sin(this.time * 0.003) * 10;
+        this.ctx.strokeStyle = `rgba(150, 180, 220, ${breathAlpha * 0.7})`;
+        this.drawFlowerOfLife(this.centerX, this.centerY, flowerBreath, 6);
+
+        // 外周の回転リング
+        const outerRadius = 300 + Math.sin(this.time * 0.002) * 20;
+        this.ctx.strokeStyle = `rgba(80, 120, 180, ${breathAlpha * 0.5})`;
+        this.ctx.beginPath();
+        this.ctx.arc(this.centerX, this.centerY, outerRadius, 0, Math.PI * 2);
+        this.ctx.stroke();
+
+        requestAnimationFrame(() => this.animate());
+    }
+}
+
+// ========================================
 // 2. SSR Particle Explosion
 // ========================================
 class SSRParticleExplosion {
@@ -1045,7 +1139,10 @@ class YudaneApp {
             srCount: document.getElementById('sr-count'),
             titleValue: document.getElementById('title-value'),
             totalBelievers: document.getElementById('total-believers'),
-            todayVisitors: document.getElementById('today-visitors')
+            todayVisitors: document.getElementById('today-visitors'),
+            // Animation Enhancement Elements
+            ritualOverlay: document.getElementById('ritual-overlay'),
+            sacredGeometryCanvas: document.getElementById('sacred-geometry-canvas')
         };
 
         // State
@@ -1069,6 +1166,7 @@ class YudaneApp {
         this.marineSnow = null;
         this.ssrExplosion = null;
         this.shareImageGenerator = null;
+        this.sacredGeometry = null;
 
         // Config
         this.config = {
@@ -1132,6 +1230,7 @@ class YudaneApp {
     async init() {
         this.marineSnow = new MarineSnow(document.getElementById('marine-snow-canvas'));
         this.ssrExplosion = new SSRParticleExplosion(document.getElementById('ssr-particles-canvas'));
+        this.sacredGeometry = new SacredGeometry(this.elements.sacredGeometryCanvas);
 
         // 信者システム初期化
         this.state.believer = initBeliever();
@@ -1170,6 +1269,9 @@ class YudaneApp {
 
         this.elements.buttonContainer.classList.add('hidden');
         this.elements.title.classList.add('fade');
+
+        // 儀式トランジション開始（暗転→光拡散）
+        this.elements.ritualOverlay.classList.add('active');
 
         // ストリーク更新
         this.state.believer = updateStreak(this.state.believer);
@@ -1214,11 +1316,42 @@ class YudaneApp {
         this.playRarityEffect(rarity);
 
         this.elements.rarityBadge.textContent = rarity.label;
-        this.elements.oracleMessage.textContent = message;
+
+        // タイプライター効果で啓示を表示
+        this.typewriterEffect(message);
 
         this.elements.oracle.classList.add('visible');
         this.elements.nextRitual.classList.add('visible');
         this.startCountdown();
+    }
+
+    /**
+     * タイプライター効果（神秘的な一文字ずつ表示）
+     * @param {string} text - 表示するテキスト
+     */
+    typewriterEffect(text) {
+        const element = this.elements.oracleMessage;
+        element.textContent = '';
+        element.style.opacity = '1';
+
+        let index = 0;
+        const speed = 60; // ミリ秒/文字
+
+        const type = () => {
+            if (index < text.length) {
+                const char = text.charAt(index);
+                if (char === '\n') {
+                    element.innerHTML += '<br>';
+                } else {
+                    element.textContent += char;
+                }
+                index++;
+                setTimeout(type, speed);
+            }
+        };
+
+        // 少し遅延させてからスタート（演出のため）
+        setTimeout(type, 400);
     }
 
     /**
