@@ -694,6 +694,75 @@
                 line-height: 2;
             }
         }
+
+        /* PWAインストールプロンプト */
+        #install-prompt {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 50px;
+            z-index: 1000;
+            animation: slideUp 0.5s ease;
+        }
+
+        #install-prompt.hidden {
+            display: none;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        #install-btn {
+            padding: 10px 20px;
+            font-family: 'Zen Kaku Gothic New', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #install-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        #install-close {
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.6);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        #install-close:hover {
+            color: white;
+        }
     </style>
 
     <!-- Google Analytics 4 -->
@@ -761,6 +830,12 @@
 
         <!-- カウントダウン -->
         <div id="next-ritual">次の儀式まで<span id="countdown">--:--:--</span></div>
+
+        <!-- PWAインストールプロンプト -->
+        <div id="install-prompt" class="hidden">
+            <button id="install-btn">📲 ホーム画面に追加</button>
+            <button id="install-close" aria-label="閉じる">×</button>
+        </div>
     </div>
 
     <!-- SSR演出レイヤー -->
@@ -1688,12 +1763,34 @@
         // シェア
         // ========================================
 
+
         function shareToX() {
             if (!currentRitual) return;
             const { message, rarity } = currentRitual;
-            const r = rarity.name === 'N' ? '' : `[${rarity.name}] を引きました！\n`;
-            const text = encodeURIComponent(`${r}今日の神託：\n${message}\n\n#YUDANE - 完全なる委任`);
-            window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank', 'width=550,height=420');
+
+            // SSR専用演出
+            if (rarity.name === 'SSR') {
+                // フラッシュ演出
+                ssrFlash.classList.add('active');
+                ssrExplosion.explode();
+                setTimeout(() => ssrFlash.classList.remove('active'), 1500);
+            }
+
+            // レアリティ別ツイート文
+            let tweetText;
+            if (rarity.name === 'SSR') {
+                tweetText = `🌟✨ SSR神託を授かりました ✨🌟\n\n「${message}」\n\n運命の言葉を受け取りました。\n\n#YUDANE #SSR神託`;
+            } else if (rarity.name === 'SR') {
+                tweetText = `💜 SR神託を引きました！\n\n${message}\n\n#YUDANE`;
+            } else if (rarity.name === 'R') {
+                tweetText = `💎 R神託：\n${message}\n\n#YUDANE`;
+            } else {
+                tweetText = `今日の神託：\n${message}\n\n#YUDANE`;
+            }
+
+            const url = 'https://jolly-babka-9847a3.netlify.app/';
+            const encoded = encodeURIComponent(tweetText);
+            window.open(`https://twitter.com/intent/tweet?text=${encoded}&url=${encodeURIComponent(url)}`, '_blank', 'width=550,height=500');
         }
 
         // ========================================
@@ -1743,6 +1840,79 @@
             document.addEventListener('DOMContentLoaded', init);
         } else {
             init();
+        }
+
+        // ========================================
+        // PWAインストールプロンプト
+        // ========================================
+
+        let deferredPrompt = null;
+        const installPrompt = document.getElementById('install-prompt');
+        const installBtn = document.getElementById('install-btn');
+        const installClose = document.getElementById('install-close');
+
+        // beforeinstallpromptイベントをキャプチャ
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+
+            // 一度閉じた人には1週間表示しない
+            const dismissed = localStorage.getItem('pwa-dismissed');
+            if (dismissed && Date.now() - parseInt(dismissed) < 7 * 24 * 60 * 60 * 1000) {
+                return;
+            }
+
+            // 少し待ってから表示
+            setTimeout(() => {
+                installPrompt.classList.remove('hidden');
+            }, 5000);
+        });
+
+        // インストールボタン
+        if (installBtn) {
+            installBtn.addEventListener('click', async () => {
+                if (!deferredPrompt) return;
+
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+
+                if (outcome === 'accepted') {
+                    console.log('PWA installed');
+                }
+
+                deferredPrompt = null;
+                installPrompt.classList.add('hidden');
+            });
+        }
+
+        // 閉じるボタン
+        if (installClose) {
+            installClose.addEventListener('click', () => {
+                installPrompt.classList.add('hidden');
+                localStorage.setItem('pwa-dismissed', Date.now().toString());
+            });
+        }
+
+        // インストール完了検知
+        window.addEventListener('appinstalled', () => {
+            installPrompt.classList.add('hidden');
+            deferredPrompt = null;
+        });
+
+        // ========================================
+        // Service Worker登録
+        // ========================================
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('SW registered:', registration.scope);
+                    })
+                    .catch((error) => {
+                        console.log('SW registration failed:', error);
+                    });
+            });
         }
     </script>
 </body>
