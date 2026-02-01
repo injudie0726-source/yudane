@@ -11,12 +11,24 @@
 - [x] Netlify にデプロイ（GitHub連携で自動化済み）
 - [x] Google Analytics 導入（G-9NQ31LK1BP）
 
-## Phase 1: バイラル装置 ← 進行中
+## Phase 1: バイラル装置 ✅
 
 - [x] シェア画像生成機能（Canvas API）
 - [x] SSR専用シェア演出
 - [x] PWA完全対応
 - [x] ローンチ告知
+
+## コードレビュー修正 ← 進行中
+
+- [x] 問題1: ファイル分離（CSS/JS外部化）
+- [x] 問題2: グローバル変数→YudaneAppクラス化
+- [x] 問題3: エラーハンドリング追加
+- [x] 問題4: XSS修正（textContent使用）
+- [x] 問題5: マジックナンバー整理（TIMING/STORAGE定数）
+- [x] 問題6: Service Worker修正
+- [x] 問題7: a11y対応（aria-label, focus-visible）
+- [x] 問題8: CSS変数整理
+- [ ] 動作確認＆デプロイ
 
 ## Phase 2: 収益化 v1
 

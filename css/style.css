@@ -1,0 +1,763 @@
+/* ========================================
+   YUDANE - 完全なる委任
+   Design System & Styles
+   ======================================== */
+
+/* ========================================
+   CSS Variables (Design Tokens)
+   ======================================== */
+:root {
+    /* Colors - Deep Sea Theme */
+    --deep-sea-1: #010610;
+    --deep-sea-2: #041225;
+    --deep-sea-3: #0a1f3a;
+    --deep-sea-4: #0f2847;
+
+    /* Glass Morphism */
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-highlight: rgba(255, 255, 255, 0.12);
+
+    /* Text */
+    --text-primary: rgba(255, 255, 255, 0.92);
+    --text-secondary: rgba(255, 255, 255, 0.5);
+
+    /* Accent Colors */
+    --gold: #ffd700;
+    --gold-glow: rgba(255, 215, 0, 0.6);
+    --cyan: #00e5ff;
+    --purple: #c77dff;
+
+    /* Animation Timing */
+    --transition-fast: 0.2s;
+    --transition-normal: 0.3s;
+    --transition-slow: 0.5s;
+
+    /* Install Button Gradient */
+    --install-btn-start: #667eea;
+    --install-btn-end: #764ba2;
+}
+
+/* ========================================
+   Reset & Base
+   ======================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    font-family: 'Zen Kaku Gothic New', 'Hiragino Kaku Gothic ProN', sans-serif;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    background: var(--deep-sea-1);
+}
+
+/* ========================================
+   1. Atmosphere (Background Effects)
+   ======================================== */
+#app {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+}
+
+#background-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background:
+        radial-gradient(ellipse 150% 100% at 50% 0%, var(--deep-sea-2) 0%, transparent 50%),
+        radial-gradient(ellipse 80% 50% at 20% 100%, var(--deep-sea-4) 0%, transparent 40%),
+        radial-gradient(ellipse 80% 50% at 80% 100%, var(--deep-sea-3) 0%, transparent 40%),
+        linear-gradient(180deg, var(--deep-sea-1) 0%, var(--deep-sea-2) 40%, var(--deep-sea-3) 100%);
+    animation: atmosphereShift 20s ease-in-out infinite;
+    z-index: 0;
+}
+
+@keyframes atmosphereShift {
+
+    0%,
+    100% {
+        filter: brightness(1) saturate(1);
+        transform: scale(1);
+    }
+
+    25% {
+        filter: brightness(1.05) saturate(1.1);
+    }
+
+    50% {
+        filter: brightness(0.95) saturate(0.95);
+        transform: scale(1.02);
+    }
+
+    75% {
+        filter: brightness(1.08) saturate(1.05);
+    }
+}
+
+/* Marine Snow Canvas */
+#marine-snow-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* Ambient Lights */
+.ambient-light {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    opacity: 0.08;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.light-1 {
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, #1a4a7a 0%, transparent 70%);
+    top: -10%;
+    left: -10%;
+    animation: lightFloat1 15s ease-in-out infinite;
+}
+
+.light-2 {
+    width: 350px;
+    height: 350px;
+    background: radial-gradient(circle, #2a3a6a 0%, transparent 70%);
+    bottom: 10%;
+    right: -5%;
+    animation: lightFloat2 18s ease-in-out infinite;
+}
+
+.light-3 {
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, #3a2a5a 0%, transparent 70%);
+    top: 40%;
+    left: 50%;
+    transform: translateX(-50%);
+    animation: lightFloat3 12s ease-in-out infinite;
+}
+
+@keyframes lightFloat1 {
+
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+        opacity: 0.08;
+    }
+
+    50% {
+        transform: translate(30px, 20px) scale(1.1);
+        opacity: 0.12;
+    }
+}
+
+@keyframes lightFloat2 {
+
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+        opacity: 0.08;
+    }
+
+    50% {
+        transform: translate(-25px, -15px) scale(1.15);
+        opacity: 0.1;
+    }
+}
+
+@keyframes lightFloat3 {
+
+    0%,
+    100% {
+        transform: translateX(-50%) scale(1);
+        opacity: 0.05;
+    }
+
+    50% {
+        transform: translateX(-50%) scale(1.2);
+        opacity: 0.1;
+    }
+}
+
+/* ========================================
+   2. Glass Morphism UI
+   ======================================== */
+.glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+}
+
+.glass-panel-strong {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-highlight);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+#canvas-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+}
+
+canvas {
+    display: block;
+}
+
+/* ========================================
+   3. Typography
+   ======================================== */
+#title {
+    position: absolute;
+    top: 6%;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    z-index: 50;
+    transition: opacity 1s ease;
+}
+
+#title.fade {
+    opacity: 0.2;
+}
+
+#title h1 {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 2.2rem;
+    font-weight: 400;
+    letter-spacing: 0.6em;
+    color: var(--text-primary);
+    text-shadow: 0 0 40px rgba(100, 150, 200, 0.3);
+    margin-bottom: 12px;
+}
+
+#title p {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 300;
+    letter-spacing: 0.35em;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+/* ========================================
+   4. YUDANE Button
+   ======================================== */
+#yudane-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 26px 56px;
+    font-family: 'Shippori Mincho', serif;
+    font-size: 1.4rem;
+    font-weight: 500;
+    letter-spacing: 0.5em;
+    color: var(--text-primary);
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 60px;
+    cursor: pointer;
+    z-index: 100;
+    transition: all var(--transition-slow) cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow:
+        0 4px 30px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+#yudane-btn::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 20%;
+    right: 20%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+}
+
+#yudane-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow:
+        0 8px 40px rgba(80, 120, 200, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    transform: translate(-50%, -50%) scale(1.03);
+}
+
+#yudane-btn:active:not(:disabled) {
+    transform: translate(-50%, -50%) scale(0.98);
+}
+
+#yudane-btn.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(0.9);
+}
+
+#yudane-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+}
+
+/* Focus Ring for Accessibility */
+#yudane-btn:focus-visible,
+button:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+}
+
+/* ========================================
+   5. Oracle Message
+   ======================================== */
+#oracle {
+    position: absolute;
+    top: 38%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 2s ease-in-out;
+    width: 88%;
+    max-width: 480px;
+}
+
+#oracle.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+#oracle-label {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 300;
+    letter-spacing: 0.4em;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    text-transform: uppercase;
+}
+
+/* Rarity Badge */
+#rarity-badge {
+    display: inline-block;
+    padding: 6px 20px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 0.6rem;
+    font-weight: 500;
+    letter-spacing: 0.25em;
+    border-radius: 30px;
+    margin-bottom: 24px;
+}
+
+.rarity-N #rarity-badge {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+    border: 1px solid var(--glass-border);
+}
+
+.rarity-R #rarity-badge {
+    background: rgba(0, 229, 255, 0.1);
+    color: var(--cyan);
+    border: 1px solid rgba(0, 229, 255, 0.3);
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.2);
+}
+
+.rarity-SR #rarity-badge {
+    background: rgba(199, 125, 255, 0.15);
+    color: var(--purple);
+    border: 1px solid rgba(199, 125, 255, 0.4);
+    box-shadow: 0 0 30px rgba(199, 125, 255, 0.3);
+    animation: srBadgePulse 2.5s ease-in-out infinite;
+}
+
+.rarity-SSR #rarity-badge {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 165, 0, 0.15));
+    color: var(--gold);
+    border: 1px solid rgba(255, 215, 0, 0.5);
+    box-shadow: 0 0 40px var(--gold-glow);
+    animation: ssrBadgeGlow 2s ease-in-out infinite;
+}
+
+@keyframes srBadgePulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 30px rgba(199, 125, 255, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 0 50px rgba(199, 125, 255, 0.5);
+    }
+}
+
+@keyframes ssrBadgeGlow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 40px var(--gold-glow);
+    }
+
+    50% {
+        box-shadow: 0 0 60px rgba(255, 215, 0, 0.8), 0 0 100px rgba(255, 165, 0, 0.3);
+    }
+}
+
+/* Oracle Message Text */
+#oracle-message {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 1.15rem;
+    font-weight: 400;
+    line-height: 2.2;
+    letter-spacing: 0.12em;
+    transition: all var(--transition-slow) ease;
+}
+
+.rarity-N #oracle-message {
+    color: var(--text-primary);
+    text-shadow: 0 0 30px rgba(150, 180, 220, 0.2);
+}
+
+.rarity-R #oracle-message {
+    color: #b0f0ff;
+    text-shadow: 0 0 25px rgba(0, 229, 255, 0.4);
+}
+
+.rarity-SR #oracle-message {
+    color: #dcc0ff;
+    text-shadow: 0 0 35px rgba(199, 125, 255, 0.5);
+    animation: srTextGlow 3s ease-in-out infinite;
+}
+
+.rarity-SSR #oracle-message {
+    color: var(--gold);
+    text-shadow:
+        0 0 30px var(--gold-glow),
+        0 0 60px rgba(255, 165, 0, 0.4),
+        0 0 100px rgba(255, 140, 0, 0.2);
+    animation: ssrTextGlow 2s ease-in-out infinite;
+}
+
+@keyframes srTextGlow {
+
+    0%,
+    100% {
+        text-shadow: 0 0 35px rgba(199, 125, 255, 0.5);
+    }
+
+    50% {
+        text-shadow: 0 0 50px rgba(199, 125, 255, 0.7), 0 0 80px rgba(180, 100, 255, 0.3);
+    }
+}
+
+@keyframes ssrTextGlow {
+
+    0%,
+    100% {
+        text-shadow: 0 0 30px var(--gold-glow), 0 0 60px rgba(255, 165, 0, 0.4);
+    }
+
+    50% {
+        text-shadow: 0 0 50px var(--gold-glow), 0 0 100px rgba(255, 165, 0, 0.6), 0 0 150px rgba(255, 140, 0, 0.3);
+    }
+}
+
+/* SR Background Flicker */
+.rarity-SR #background-layer {
+    animation: atmosphereShift 20s ease-in-out infinite, srFlicker 4s ease-in-out infinite;
+}
+
+@keyframes srFlicker {
+
+    0%,
+    100% {
+        filter: brightness(1);
+    }
+
+    50% {
+        filter: brightness(1.2) saturate(1.1);
+    }
+}
+
+/* ========================================
+   6. SSR Effects
+   ======================================== */
+#ssr-flash {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, rgba(255, 215, 0, 0.8), rgba(255, 165, 0, 0.4), transparent 70%);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+#ssr-flash.active {
+    animation: ssrFlashAnim 1.5s ease-out forwards;
+}
+
+@keyframes ssrFlashAnim {
+    0% {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+
+    15% {
+        opacity: 1;
+        transform: scale(1.2);
+    }
+
+    30% {
+        opacity: 0.7;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.4;
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(1.5);
+    }
+}
+
+#ssr-particles-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 999;
+}
+
+/* ========================================
+   7. Share Buttons
+   ======================================== */
+#share-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 32px;
+    flex-wrap: wrap;
+}
+
+#share-buttons button {
+    padding: 12px 24px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all var(--transition-normal) ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    backdrop-filter: blur(8px);
+}
+
+#download-btn {
+    background: linear-gradient(135deg, rgba(100, 120, 150, 0.8) 0%, rgba(70, 90, 120, 0.8) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+#download-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 24px rgba(100, 140, 180, 0.3);
+}
+
+#download-btn svg {
+    width: 16px;
+    height: 16px;
+    stroke: white;
+}
+
+#share-btn {
+    background: linear-gradient(135deg, rgba(29, 161, 242, 0.9) 0%, rgba(13, 142, 207, 0.9) 100%);
+}
+
+#share-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 30px rgba(29, 161, 242, 0.4);
+}
+
+#share-btn svg {
+    width: 14px;
+    height: 14px;
+    fill: white;
+}
+
+/* ========================================
+   8. Countdown & Ritual Complete
+   ======================================== */
+#next-ritual {
+    position: absolute;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    z-index: 100;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+}
+
+#next-ritual.visible {
+    opacity: 1;
+}
+
+#countdown {
+    display: inline-block;
+    margin-left: 8px;
+    font-variant-numeric: tabular-nums;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+#ritual-complete {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Shippori Mincho', serif;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    letter-spacing: 0.3em;
+    z-index: 100;
+    display: none;
+}
+
+#ritual-complete.visible {
+    display: block;
+}
+
+/* ========================================
+   9. PWA Install Prompt
+   ======================================== */
+#install-prompt {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 50px;
+    z-index: 1000;
+    animation: slideUp 0.5s ease;
+}
+
+#install-prompt.hidden {
+    display: none;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+#install-btn {
+    padding: 10px 20px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: white;
+    background: linear-gradient(135deg, var(--install-btn-start) 0%, var(--install-btn-end) 100%);
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all var(--transition-normal) ease;
+}
+
+#install-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+}
+
+#install-close {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.6);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: color var(--transition-fast);
+}
+
+#install-close:hover {
+    color: white;
+}
+
+/* ========================================
+   10. Responsive
+   ======================================== */
+@media (max-width: 480px) {
+    #title h1 {
+        font-size: 1.8rem;
+        letter-spacing: 0.4em;
+    }
+
+    #yudane-btn {
+        padding: 22px 44px;
+        font-size: 1.2rem;
+    }
+
+    #oracle-message {
+        font-size: 1.05rem;
+        line-height: 2;
+    }
+}

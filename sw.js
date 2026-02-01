@@ -1,8 +1,15 @@
-const CACHE_NAME = 'yudane-v1';
+/**
+ * YUDANE Service Worker
+ * @version 2.0.0
+ */
+
+const CACHE_NAME = 'yudane-v2';
 const ASSETS = [
     '/',
     '/index.html',
     '/manifest.json',
+    '/css/style.css',
+    '/js/app.js',
     '/assets/favicon.ico',
     '/assets/apple-touch-icon.png',
     '/assets/icon-192.png',
@@ -12,7 +19,16 @@ const ASSETS = [
     'https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js'
 ];
 
-// インストール
+// Non-cacheable URL patterns
+const SKIP_CACHE_PATTERNS = [
+    'rss2json',
+    'googletagmanager',
+    'google-analytics'
+];
+
+/**
+ * Install event - cache assets
+ */
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME)
@@ -21,7 +37,9 @@ self.addEventListener('install', (event) => {
     );
 });
 
-// アクティベート
+/**
+ * Activate event - clean old caches
+ */
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((keys) => {
@@ -33,18 +51,22 @@ self.addEventListener('activate', (event) => {
     );
 });
 
-// フェッチ（ネットワーク優先、フォールバックでキャッシュ）
+/**
+ * Fetch event - network first, fallback to cache
+ */
 self.addEventListener('fetch', (event) => {
-    // APIリクエストはキャッシュしない
-    if (event.request.url.includes('rss2json') ||
-        event.request.url.includes('googletagmanager')) {
+    const url = event.request.url;
+
+    // Skip caching for API requests and analytics
+    if (SKIP_CACHE_PATTERNS.some(pattern => url.includes(pattern))) {
+        event.respondWith(fetch(event.request));
         return;
     }
 
     event.respondWith(
         fetch(event.request)
             .then((response) => {
-                // 成功したらキャッシュを更新
+                // Cache successful responses
                 if (response.status === 200) {
                     const clone = response.clone();
                     caches.open(CACHE_NAME).then((cache) => {
@@ -54,7 +76,7 @@ self.addEventListener('fetch', (event) => {
                 return response;
             })
             .catch(() => {
-                // オフラインならキャッシュから返す
+                // Offline fallback
                 return caches.match(event.request);
             })
     );
