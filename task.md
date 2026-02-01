@@ -1,13 +1,15 @@
 # YUDANE - タスク管理
 
-## Phase 0: 公開準備
+**公開URL**: https://jolly-babka-9847a3.netlify.app/
+
+## Phase 0: 公開準備 ✅
 
 - [x] プロジェクト構造整理
 - [x] OGP メタタグ追加
 - [x] favicon / apple-touch-icon 作成・設定
 - [x] PWA manifest.json 作成
-- [ ] Vercel にデプロイ ← 次
-- [ ] Google Analytics 導入
+- [x] Netlify にデプロイ
+- [ ] Google Analytics 導入 ← 次
 
 ## Phase 1: バイラル装置
 
