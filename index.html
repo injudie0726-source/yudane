@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>YUDANE - 完全なる委任</title>
+    <meta name="description" content="Z世代のためのデジタル宗教。不安を沈殿させ、AIオラクルの啓示を受け取る。1日1回の神聖な儀式。">
+
+    <!-- OGP -->
+    <meta property="og:title" content="YUDANE - 完全なる委任">
+    <meta property="og:description" content="Z世代のためのデジタル宗教。不安を沈殿させ、AIオラクルの啓示を受け取る。">
+    <meta property="og:image" content="/assets/ogp.png">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="ja_JP">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="YUDANE - 完全なる委任">
+    <meta name="twitter:description" content="Z世代のためのデジタル宗教。不安を沈殿させ、AIオラクルの啓示を受け取る。">
+    <meta name="twitter:image" content="/assets/ogp.png">
+
+    <!-- Favicon & PWA -->
+    <link rel="icon" href="/assets/favicon.ico" sizes="32x32">
+    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#041225">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- Google Fonts: Shippori Mincho + Zen Kaku Gothic -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600&family=Zen+Kaku+Gothic+New:wght@300;400;500&display=swap"
+        rel="stylesheet">
+
+    <!-- Matter.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+
+
+    <style>
+        :root {
+            --deep-sea-1: #010610;
+            --deep-sea-2: #041225;
+            --deep-sea-3: #0a1f3a;
+            --deep-sea-4: #0f2847;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-highlight: rgba(255, 255, 255, 0.12);
+            --text-primary: rgba(255, 255, 255, 0.92);
+            --text-secondary: rgba(255, 255, 255, 0.5);
+            --gold: #ffd700;
+            --gold-glow: rgba(255, 215, 0, 0.6);
+            --cyan: #00e5ff;
+            --purple: #c77dff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Zen Kaku Gothic New', 'Hiragino Kaku Gothic ProN', sans-serif;
+            touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
+            background: var(--deep-sea-1);
+        }
+
+        /* ========================================
+           1. 没入感のある背景演出 (Atmosphere)
+        ======================================== */
+        #app {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+        }
+
+        /* 深海グラデーション背景（揺らぎアニメーション） */
+        #background-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(ellipse 150% 100% at 50% 0%, var(--deep-sea-2) 0%, transparent 50%),
+                radial-gradient(ellipse 80% 50% at 20% 100%, var(--deep-sea-4) 0%, transparent 40%),
+                radial-gradient(ellipse 80% 50% at 80% 100%, var(--deep-sea-3) 0%, transparent 40%),
+                linear-gradient(180deg, var(--deep-sea-1) 0%, var(--deep-sea-2) 40%, var(--deep-sea-3) 100%);
+            animation: atmosphereShift 20s ease-in-out infinite;
+            z-index: 0;
+        }
+
+        @keyframes atmosphereShift {
+
+            0%,
+            100% {
+                filter: brightness(1) saturate(1);
+                transform: scale(1);
+            }
+
+            25% {
+                filter: brightness(1.05) saturate(1.1);
+            }
+
+            50% {
+                filter: brightness(0.95) saturate(0.95);
+                transform: scale(1.02);
+            }
+
+            75% {
+                filter: brightness(1.08) saturate(1.05);
+            }
+        }
+
+        /* マリンスノー Canvas */
+        #marine-snow-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* 環境光（ぼんやりした光源） */
+        .ambient-light {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.08;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .light-1 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, #1a4a7a 0%, transparent 70%);
+            top: -10%;
+            left: -10%;
+            animation: lightFloat1 15s ease-in-out infinite;
+        }
+
+        .light-2 {
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, #2a3a6a 0%, transparent 70%);
+            bottom: 10%;
+            right: -5%;
+            animation: lightFloat2 18s ease-in-out infinite;
+        }
+
+        .light-3 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, #3a2a5a 0%, transparent 70%);
+            top: 40%;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: lightFloat3 12s ease-in-out infinite;
+        }
+
+        @keyframes lightFloat1 {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+                opacity: 0.08;
+            }
+
+            50% {
+                transform: translate(30px, 20px) scale(1.1);
+                opacity: 0.12;
+            }
+        }
+
+        @keyframes lightFloat2 {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+                opacity: 0.08;
+            }
+
+            50% {
+                transform: translate(-25px, -15px) scale(1.15);
+                opacity: 0.1;
+            }
+        }
+
+        @keyframes lightFloat3 {
+
+            0%,
+            100% {
+                transform: translateX(-50%) scale(1);
+                opacity: 0.05;
+            }
+
+            50% {
+                transform: translateX(-50%) scale(1.2);
+                opacity: 0.1;
+            }
+        }
+
+        /* ========================================
+           2. グラスモーフィズム UI
+        ======================================== */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+        }
+
+        .glass-panel-strong {
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-highlight);
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        /* Physics Canvas Container */
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* ========================================
+           3. タイポグラフィ (Sacred Fonts)
+        ======================================== */
+        #title {
+            position: absolute;
+            top: 6%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 50;
+            transition: opacity 1s ease;
+        }
+
+        #title.fade {
+            opacity: 0.2;
+        }
+
+        #title h1 {
+            font-family: 'Shippori Mincho', serif;
+            font-size: 2.2rem;
+            font-weight: 400;
+            letter-spacing: 0.6em;
+            color: var(--text-primary);
+            text-shadow: 0 0 40px rgba(100, 150, 200, 0.3);
+            margin-bottom: 12px;
+        }
+
+        #title p {
+            font-family: 'Zen Kaku Gothic New', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 300;
+            letter-spacing: 0.35em;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        /* YUDANEボタン */
+        #yudane-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 26px 56px;
+            font-family: 'Shippori Mincho', serif;
+            font-size: 1.4rem;
+            font-weight: 500;
+            letter-spacing: 0.5em;
+            color: var(--text-primary);
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 60px;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow:
+                0 4px 30px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        #yudane-btn::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: 20%;
+            right: 20%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        }
+
+        #yudane-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow:
+                0 8px 40px rgba(80, 120, 200, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            transform: translate(-50%, -50%) scale(1.03);
+        }
+
+        #yudane-btn:active:not(:disabled) {
+            transform: translate(-50%, -50%) scale(0.98);
+        }
+
+        #yudane-btn.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translate(-50%, -50%) scale(0.9);
+        }
+
+        #yudane-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.4;
+        }
+
+        /* ========================================
+           オラクルメッセージ
+        ======================================== */
+        #oracle {
+            position: absolute;
+            top: 38%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 2s ease-in-out;
+            width: 88%;
+            max-width: 480px;
+        }
+
+        #oracle.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        #oracle-label {
+            font-family: 'Zen Kaku Gothic New', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 300;
+            letter-spacing: 0.4em;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        /* レアリティバッジ */
+        #rarity-badge {
+            display: inline-block;
+            padding: 6px 20px;
+            font-family: 'Zen Kaku Gothic New', sans-serif;
+            font-size: 0.6rem;
+            font-weight: 500;
+            letter-spacing: 0.25em;
+            border-radius: 30px;
+            margin-bottom: 24px;
+        }
+
+        .rarity-N #rarity-badge {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-secondary);
+            border: 1px solid var(--glass-border);
+        }
+
+        .rarity-R #rarity-badge {
+            background: rgba(0, 229, 255, 0.1);
+            color: var(--cyan);
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.2);
+        }
+
+        .rarity-SR #rarity-badge {
+            background: rgba(199, 125, 255, 0.15);
+            color: var(--purple);
+            border: 1px solid rgba(199, 125, 255, 0.4);
+            box-shadow: 0 0 30px rgba(199, 125, 255, 0.3);
+            animation: srBadgePulse 2.5s ease-in-out infinite;
+        }
+
+        .rarity-SSR #rarity-badge {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 165, 0, 0.15));
+            color: var(--gold);
+            border: 1px solid rgba(255, 215, 0, 0.5);
+            box-shadow: 0 0 40px var(--gold-glow);
+            animation: ssrBadgeGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes srBadgePulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 30px rgba(199, 125, 255, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 50px rgba(199, 125, 255, 0.5);
+            }
+        }
+
+        @keyframes ssrBadgeGlow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 40px var(--gold-glow);
+            }
+
+            50% {
+                box-shadow: 0 0 60px rgba(255, 215, 0, 0.8), 0 0 100px rgba(255, 165, 0, 0.3);
+            }
+        }
+
+        /* オラクルメッセージ本体 */
+        #oracle-message {
+            font-family: 'Shippori Mincho', serif;
+            font-size: 1.15rem;
+            font-weight: 400;
+            line-height: 2.2;
+            letter-spacing: 0.12em;
+            transition: all 0.5s ease;
+        }
+
+        .rarity-N #oracle-message {
+            color: var(--text-primary);
+            text-shadow: 0 0 30px rgba(150, 180, 220, 0.2);
+        }
+
+        .rarity-R #oracle-message {
+            color: #b0f0ff;
+            text-shadow: 0 0 25px rgba(0, 229, 255, 0.4);
+        }
+
+        .rarity-SR #oracle-message {
+            color: #dcc0ff;
+            text-shadow: 0 0 35px rgba(199, 125, 255, 0.5);
+            animation: srTextGlow 3s ease-in-out infinite;
+        }
+
+        .rarity-SSR #oracle-message {
+            color: var(--gold);
+            text-shadow:
+                0 0 30px var(--gold-glow),
+                0 0 60px rgba(255, 165, 0, 0.4),
+                0 0 100px rgba(255, 140, 0, 0.2);
+            animation: ssrTextGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes srTextGlow {
+
+            0%,
+            100% {
+                text-shadow: 0 0 35px rgba(199, 125, 255, 0.5);
+            }
+
+            50% {
+                text-shadow: 0 0 50px rgba(199, 125, 255, 0.7), 0 0 80px rgba(180, 100, 255, 0.3);
+            }
+        }
+
+        @keyframes ssrTextGlow {
+
+            0%,
+            100% {
+                text-shadow: 0 0 30px var(--gold-glow), 0 0 60px rgba(255, 165, 0, 0.4);
+            }
+
+            50% {
+                text-shadow: 0 0 50px var(--gold-glow), 0 0 100px rgba(255, 165, 0, 0.6), 0 0 150px rgba(255, 140, 0, 0.3);
+            }
+        }
+
+        /* SR 背景明滅 */
+        .rarity-SR #background-layer {
+            animation: atmosphereShift 20s ease-in-out infinite, srFlicker 4s ease-in-out infinite;
+        }
+
+        @keyframes srFlicker {
+
+            0%,
+            100% {
+                filter: brightness(1);
+            }
+
+            50% {
+                filter: brightness(1.2) saturate(1.1);
+            }
+        }
+
+        /* ========================================
+           5. SSR 演出強化
+        ======================================== */
+        #ssr-flash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(255, 215, 0, 0.8), rgba(255, 165, 0, 0.4), transparent 70%);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        #ssr-flash.active {
+            animation: ssrFlashAnim 1.5s ease-out forwards;
+        }
+
+        @keyframes ssrFlashAnim {
+            0% {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+
+            15% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+
+            30% {
+                opacity: 0.7;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+
+            100% {
+                opacity: 0;
+                transform: scale(1.5);
+            }
+        }
+
+        #ssr-particles-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* シェアボタン */
+        #share-btn {
+            margin-top: 36px;
+            padding: 14px 32px;
+            font-family: 'Zen Kaku Gothic New', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 400;
+            letter-spacing: 0.15em;
+            color: white;
+            background: linear-gradient(135deg, rgba(29, 161, 242, 0.9) 0%, rgba(13, 142, 207, 0.9) 100%);
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(8px);
+        }
+
+        #share-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 30px rgba(29, 161, 242, 0.4);
+        }
+
+        #share-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: white;
+        }
+
+        /* 次の儀式カウントダウン */
+        #next-ritual {
+            position: absolute;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            font-family: 'Zen Kaku Gothic New', sans-serif;
+            color: var(--text-secondary);
+            font-size: 0.7rem;
+            letter-spacing: 0.2em;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+
+        #next-ritual.visible {
+            opacity: 1;
+        }
+
+        #countdown {
+            display: inline-block;
+            margin-left: 8px;
+            font-variant-numeric: tabular-nums;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* 儀式終了メッセージ */
+        #ritual-complete {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Shippori Mincho', serif;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            letter-spacing: 0.3em;
+            z-index: 100;
+            display: none;
+        }
+
+        #ritual-complete.visible {
+            display: block;
+        }
+
+        /* レスポンシブ */
+        @media (max-width: 480px) {
+            #title h1 {
+                font-size: 1.8rem;
+                letter-spacing: 0.4em;
+            }
+
+            #yudane-btn {
+                padding: 22px 44px;
+                font-size: 1.2rem;
+            }
+
+            #oracle-message {
+                font-size: 1.05rem;
+                line-height: 2;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <!-- 背景レイヤー -->
+        <div id="background-layer"></div>
+
+        <!-- マリンスノー Canvas -->
+        <canvas id="marine-snow-canvas"></canvas>
+
+        <!-- 環境光 -->
+        <div class="ambient-light light-1"></div>
+        <div class="ambient-light light-2"></div>
+        <div class="ambient-light light-3"></div>
+
+        <!-- 物理演算 Canvas -->
+        <div id="canvas-container"></div>
+
+        <!-- タイトル -->
+        <div id="title">
+            <h1>YUDANE</h1>
+            <p>Digital Religion for Gen-Z</p>
+        </div>
+
+        <!-- メインボタン -->
+        <button id="yudane-btn">委ねる</button>
+
+        <!-- 儀式終了 -->
+        <div id="ritual-complete">本日の儀式は終了しました</div>
+
+        <!-- オラクル -->
+        <div id="oracle">
+            <div id="oracle-label">AI Oracle — 今日の啓示</div>
+            <div id="rarity-badge">NORMAL</div>
+            <div id="oracle-message"></div>
+            <button id="share-btn">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                </svg>
+                #YUDANE をシェア
+            </button>
+        </div>
+
+        <!-- カウントダウン -->
+        <div id="next-ritual">次の儀式まで<span id="countdown">--:--:--</span></div>
+    </div>
+
+    <!-- SSR演出レイヤー -->
+    <div id="ssr-flash"></div>
+    <canvas id="ssr-particles-canvas"></canvas>
+
+    <script>
+        // ========================================
+        // YUDANE - 完全なる委任
+        // Awwwards Level Edition
+        // ========================================
+
+        const { Engine, Render, Runner, Bodies, Body, Composite, Mouse, MouseConstraint, Events } = Matter;
+
+        // ========================================
+        // 1. マリンスノー（深海パーティクル）
+        // ========================================
+
+        class MarineSnow {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.particles = [];
+                this.resize();
+                this.init();
+                window.addEventListener('resize', () => this.resize());
+            }
+
+            resize() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            }
+
+            init() {
+                const count = Math.min(80, Math.floor(window.innerWidth * window.innerHeight / 15000));
+                for (let i = 0; i < count; i++) {
+                    this.particles.push({
+                        x: Math.random() * this.canvas.width,
+                        y: Math.random() * this.canvas.height,
+                        size: Math.random() * 2 + 0.5,
+                        speedY: Math.random() * 0.3 + 0.1,
+                        speedX: (Math.random() - 0.5) * 0.2,
+                        opacity: Math.random() * 0.5 + 0.1,
+                        pulse: Math.random() * Math.PI * 2,
+                        pulseSpeed: Math.random() * 0.02 + 0.01
+                    });
+                }
+                this.animate();
+            }
+
+            animate() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                this.particles.forEach(p => {
+                    // 移動
+                    p.y -= p.speedY;
+                    p.x += p.speedX + Math.sin(p.pulse) * 0.1;
+                    p.pulse += p.pulseSpeed;
+
+                    // ループ
+                    if (p.y < -10) {
+                        p.y = this.canvas.height + 10;
+                        p.x = Math.random() * this.canvas.width;
+                    }
+
+                    // 明滅
+                    const flicker = 0.5 + Math.sin(p.pulse) * 0.3;
+                    const alpha = p.opacity * flicker;
+
+                    // 描画
+                    this.ctx.beginPath();
+                    this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    this.ctx.fillStyle = `rgba(200, 220, 255, ${alpha})`;
+                    this.ctx.fill();
+
+                    // グロー
+                    if (p.size > 1.5) {
+                        this.ctx.beginPath();
+                        this.ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2);
+                        this.ctx.fillStyle = `rgba(150, 180, 255, ${alpha * 0.15})`;
+                        this.ctx.fill();
+                    }
+                });
+
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+
+        // ========================================
+        // 5. SSR パーティクル爆発
+        // ========================================
+
+        class SSRParticleExplosion {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.particles = [];
+                this.running = false;
+                this.resize();
+                window.addEventListener('resize', () => this.resize());
+            }
+
+            resize() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            }
+
+            explode() {
+                this.particles = [];
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height * 0.38;
+                const count = 100;
+
+                for (let i = 0; i < count; i++) {
+                    const angle = (i / count) * Math.PI * 2 + Math.random() * 0.3;
+                    const speed = 3 + Math.random() * 8;
+                    const size = 2 + Math.random() * 4;
+
+                    this.particles.push({
+                        x: centerX,
+                        y: centerY,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        size: size,
+                        life: 1,
+                        decay: 0.01 + Math.random() * 0.02,
+                        hue: 40 + Math.random() * 20 // Gold hue
+                    });
+                }
+
+                // スパークル追加
+                for (let i = 0; i < 30; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = Math.random() * 50;
+                    this.particles.push({
+                        x: centerX + Math.cos(angle) * distance,
+                        y: centerY + Math.sin(angle) * distance,
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: (Math.random() - 0.5) * 2 - 1,
+                        size: 1 + Math.random() * 2,
+                        life: 1,
+                        decay: 0.005 + Math.random() * 0.01,
+                        hue: 45,
+                        sparkle: true
+                    });
+                }
+
+                this.running = true;
+                this.animate();
+            }
+
+            animate() {
+                if (!this.running) return;
+
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                let alive = false;
+
+                this.particles.forEach(p => {
+                    if (p.life <= 0) return;
+                    alive = true;
+
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.1; // 重力
+                    p.vx *= 0.99;
+                    p.life -= p.decay;
+
+                    const alpha = p.life;
+
+                    if (p.sparkle) {
+                        // スパークル
+                        this.ctx.save();
+                        this.ctx.translate(p.x, p.y);
+                        this.ctx.rotate(Date.now() * 0.01);
+                        this.ctx.beginPath();
+                        for (let i = 0; i < 4; i++) {
+                            const angle = (i / 4) * Math.PI * 2;
+                            this.ctx.moveTo(0, 0);
+                            this.ctx.lineTo(Math.cos(angle) * p.size * 3, Math.sin(angle) * p.size * 3);
+                        }
+                        this.ctx.strokeStyle = `hsla(${p.hue}, 100%, 70%, ${alpha})`;
+                        this.ctx.lineWidth = 1;
+                        this.ctx.stroke();
+                        this.ctx.restore();
+                    } else {
+                        // 通常パーティクル
+                        this.ctx.beginPath();
+                        this.ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+                        this.ctx.fillStyle = `hsla(${p.hue}, 100%, 60%, ${alpha})`;
+                        this.ctx.fill();
+
+                        // グロー
+                        this.ctx.beginPath();
+                        this.ctx.arc(p.x, p.y, p.size * p.life * 2, 0, Math.PI * 2);
+                        this.ctx.fillStyle = `hsla(${p.hue}, 100%, 50%, ${alpha * 0.3})`;
+                        this.ctx.fill();
+                    }
+                });
+
+                if (alive) {
+                    requestAnimationFrame(() => this.animate());
+                } else {
+                    this.running = false;
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                }
+            }
+        }
+
+        // ========================================
+        // 無限神託エンジン (The Lexicon Engine)
+        // ========================================
+
+        const LEXICON = {
+            partA: [
+                '今日はもう十分頑張ったので、',
+                '誰も見ていないので、',
+                '明日の自分がなんとかするので、',
+                '人生は長いので、',
+                'あなたは悪くないので、',
+                '地球はどうせ回るので、',
+                '考えても仕方ないので、',
+                '全部時代のせいなので、',
+                '生きてるだけで偉いので、',
+                'どうせ誰も気にしてないので、',
+                '完璧じゃなくていいので、',
+                'がんばらなくていい日なので、',
+                '宇宙規模で見れば些細なことなので、',
+                '自分に優しくしていいので、',
+                '正解なんてないので、',
+                '疲れたら休んでいいので、',
+                '失敗しても死なないので、',
+                'なんかダルいのは気のせいじゃないので、',
+                '今日という日は二度と来ないので、',
+                'あなたのペースでいいので、',
+                '無理なものは無理なので、',
+                '他人の期待は他人の問題なので、',
+                '全ての「べき」は幻想なので、',
+                '布団が呼んでいるので、'
+            ],
+            partB: [
+                'コンビニのレジ横のチキンを買って、',
+                'お風呂に2時間入って、',
+                '布団をかぶって、',
+                'アイスを食べながら、',
+                '推しの動画を見ながら、',
+                '好きな曲をリピートして、',
+                'とりあえずカフェオレを飲んで、',
+                '猫の動画をひたすら見て、',
+                '何も考えずにぼーっとして、',
+                '一番やわらかいパジャマを着て、',
+                '全部の通知をオフにして、',
+                'ウーバーで好きなもの頼んで、',
+                '昔のアニメを見返して、',
+                '好きな漫画を読み返して、',
+                'ゲームで現実逃避して、',
+                'ストレッチだけして、',
+                '深呼吸を3回して、',
+                '窓の外をぼんやり眺めて、',
+                '夜風にあたりながら、',
+                '毛布にくるまって、',
+                '今日のことは全部忘れて、',
+                'とりあえず水を飲んで、',
+                '足を温めて、',
+                'スマホを遠くに置いて、'
+            ],
+            partC: [
+                'そのまま寝落ちしてください。',
+                '明日のことは明日の自分に任せましょう。',
+                '今日はもう何もしなくていいです。',
+                '十分、よくやりました。',
+                'それでいいのです。',
+                '自分を許してあげてください。',
+                'ゆっくり沈殿してください。',
+                '人間だもの、それでいい。',
+                'あとは布団がなんとかしてくれます。',
+                '今日の自分にお疲れ様を。',
+                '世界は優しいふりをしています。',
+                '意識が遠のくまでダラダラしましょう。',
+                '明日はきっと今日よりちょっとマシです。',
+                '何もしないことも立派な選択です。',
+                'あなたはそれでいいのです。',
+                '無の境地に達しましょう。',
+                'カロリーは正義です。',
+                '生産性なんてゴミ箱へ。',
+                'そのまま、朽ちていいのです。',
+                'あなたの居場所はそこです。',
+                '存在しているだけで100点です。',
+                '今日のあなたは花丸です。',
+                'がんばったね、おやすみ。',
+                '全てを手放して、漂ってください。'
+            ]
+        };
+
+        // ========================================
+        // レアリティシステム
+        // ========================================
+
+        const RARITY = {
+            SSR: { name: 'SSR', label: '【啓示】PHANTOM', probability: 0.01, prefix: '【啓示】' },
+            SR: { name: 'SR', label: 'SUPER RARE', probability: 0.04, prefix: '' },
+            R: { name: 'R', label: 'RARE', probability: 0.25, prefix: '' },
+            N: { name: 'N', label: 'NORMAL', probability: 0.70, prefix: '' }
+        };
+
+        function drawRarity() {
+            const rand = Math.random();
+            let cumulative = 0;
+            if (rand < (cumulative += RARITY.SSR.probability)) return RARITY.SSR;
+            if (rand < (cumulative += RARITY.SR.probability)) return RARITY.SR;
+            if (rand < (cumulative += RARITY.R.probability)) return RARITY.R;
+            return RARITY.N;
+        }
+
+        function generateOracle() {
+            const a = LEXICON.partA[Math.floor(Math.random() * LEXICON.partA.length)];
+            const b = LEXICON.partB[Math.floor(Math.random() * LEXICON.partB.length)];
+            const c = LEXICON.partC[Math.floor(Math.random() * LEXICON.partC.length)];
+            return `${a}${b}${c}`;
+        }
+
+        // ========================================
+        // Daily Seal (1日1回制限)
+        // ========================================
+
+        const STORAGE_KEY = 'yudane_ritual';
+
+        function getTodayDate() {
+            const now = new Date();
+            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        }
+
+        function saveRitual(message, rarity) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                date: getTodayDate(),
+                message,
+                rarity: rarity.name
+            }));
+        }
+
+        function loadRitual() {
+            try {
+                const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+                if (data && data.date === getTodayDate()) {
+                    return { message: data.message, rarity: RARITY[data.rarity] };
+                }
+            } catch (e) { }
+            return null;
+        }
+
+        function getTimeUntilMidnight() {
+            const now = new Date();
+            const midnight = new Date(now);
+            midnight.setHours(24, 0, 0, 0);
+            return midnight - now;
+        }
+
+        function formatTime(ms) {
+            const h = Math.floor(ms / 3600000);
+            const m = Math.floor((ms % 3600000) / 60000);
+            const s = Math.floor((ms % 60000) / 1000);
+            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        // ========================================
+        // 設定
+        // ========================================
+
+        const CONFIG = {
+            fallbackWords: [
+                '将来', 'タスク', '同調圧力', '既読', 'インボイス',
+                'マウント', '自己責任', '高騰', '正解は？', 'ダルい',
+                '締切', '老後', '奨学金', 'ノルマ', '残業'
+            ],
+            anxietyPatterns: [
+                '不安', '問題', '危機', '値上げ', '高騰', '不足',
+                '炎上', '批判', '事故', '被害', '悪化', '懸念'
+            ],
+            anxietySuffixes: ['しなきゃ', 'どうする？', 'やばい', '怖い', '無理'],
+            newsFeeds: ['https://news.yahoo.co.jp/rss/topics/top-picks.xml'],
+            rss2jsonApi: 'https://api.rss2json.com/v1/api.json?rss_url=',
+            anxietyWords: [],
+            colors: [
+                'rgba(80, 120, 180, 0.6)',
+                'rgba(100, 130, 170, 0.6)',
+                'rgba(70, 110, 160, 0.6)',
+                'rgba(90, 140, 190, 0.6)'
+            ],
+            objectCount: 12,
+            floatForce: 0.00025,
+            gravityStrength: 1.3,
+            restitution: 0.55,  // 4. 気持ちいいバウンド
+            friction: 0.2
+        };
+
+        // ========================================
+        // 状態管理
+        // ========================================
+
+        let engine, render, runner, mouse, mouseConstraint;
+        let anxietyBodies = [];
+        let isReleased = false;
+        let canvasWidth, canvasHeight;
+        let currentRitual = null;
+        let countdownInterval = null;
+        let marineSnow, ssrExplosion;
+
+        const app = document.getElementById('app');
+        const container = document.getElementById('canvas-container');
+        const yudaneBtn = document.getElementById('yudane-btn');
+        const oracle = document.getElementById('oracle');
+        const oracleMessage = document.getElementById('oracle-message');
+        const rarityBadge = document.getElementById('rarity-badge');
+        const shareBtn = document.getElementById('share-btn');
+        const nextRitual = document.getElementById('next-ritual');
+        const countdown = document.getElementById('countdown');
+        const title = document.getElementById('title');
+        const ssrFlash = document.getElementById('ssr-flash');
+
+        // ========================================
+        // ニュース取得
+        // ========================================
+
+        async function fetchNewsKeywords() {
+            const keywords = new Set();
+            try {
+                const res = await fetch(CONFIG.rss2jsonApi + encodeURIComponent(CONFIG.newsFeeds[0]));
+                const data = await res.json();
+                if (data.status === 'ok' && data.items) {
+                    data.items.forEach(item => {
+                        CONFIG.anxietyPatterns.forEach(p => {
+                            if (item.title.includes(p)) keywords.add(p);
+                        });
+                        const katakana = item.title.match(/[ァ-ヶー]{2,6}/g);
+                        if (katakana) katakana.forEach(k => {
+                            if (!['ニュース', 'トップ'].includes(k)) keywords.add(k);
+                        });
+                    });
+                }
+            } catch (e) { }
+            return Array.from(keywords);
+        }
+
+        async function generateAnxietyWords() {
+            const news = await fetchNewsKeywords();
+            if (news.length >= 4) {
+                const phrases = news.map(k => Math.random() > 0.5 ?
+                    k + CONFIG.anxietySuffixes[Math.floor(Math.random() * CONFIG.anxietySuffixes.length)] : k);
+                const mixed = [...phrases.slice(0, 8), ...CONFIG.fallbackWords.slice(0, 7)];
+                CONFIG.anxietyWords = mixed.sort(() => Math.random() - 0.5);
+            } else {
+                CONFIG.anxietyWords = [...CONFIG.fallbackWords];
+            }
+        }
+
+        // ========================================
+        // 物理エンジン (4. Juice 調整)
+        // ========================================
+
+        function getCanvasSize() {
+            canvasWidth = window.innerWidth;
+            canvasHeight = window.innerHeight;
+        }
+
+        function initPhysics() {
+            getCanvasSize();
+            engine = Engine.create();
+            engine.gravity.y = 0;
+            engine.gravity.x = 0;
+
+            render = Render.create({
+                element: container,
+                engine,
+                options: {
+                    width: canvasWidth,
+                    height: canvasHeight,
+                    wireframes: false,
+                    background: 'transparent',
+                    pixelRatio: Math.min(window.devicePixelRatio, 2)
+                }
+            });
+
+            createWalls();
+            createAnxietyObjects();
+            setupMouseInteraction();
+
+            runner = Runner.create();
+            Runner.run(runner, engine);
+            Render.run(render);
+            Events.on(engine, 'beforeUpdate', floatAnimation);
+        }
+
+        function createWalls() {
+            const opts = { isStatic: true, render: { visible: false }, friction: 0.6, restitution: 0.3 };
+            Composite.add(engine.world, [
+                Bodies.rectangle(canvasWidth / 2, canvasHeight + 50, canvasWidth + 200, 100, opts),
+                Bodies.rectangle(-50, canvasHeight / 2, 100, canvasHeight + 200, opts),
+                Bodies.rectangle(canvasWidth + 50, canvasHeight / 2, 100, canvasHeight + 200, opts),
+                Bodies.rectangle(canvasWidth / 2, -50, canvasWidth + 200, 100, opts)
+            ]);
+        }
+
+        function createAnxietyObjects() {
+            const words = CONFIG.anxietyWords.slice(0, CONFIG.objectCount);
+            words.forEach((word, i) => {
+                const r = 32 + Math.random() * 18;
+                const x = 70 + Math.random() * (canvasWidth - 140);
+                const y = 100 + Math.random() * (canvasHeight - 280);
+
+                const body = Bodies.circle(x, y, r, {
+                    restitution: CONFIG.restitution,
+                    friction: CONFIG.friction,
+                    frictionAir: 0.015,
+                    label: word,
+                    render: {
+                        fillStyle: CONFIG.colors[i % CONFIG.colors.length],
+                        strokeStyle: 'rgba(255,255,255,0.2)',
+                        lineWidth: 1
+                    }
+                });
+
+                Body.setVelocity(body, {
+                    x: (Math.random() - 0.5) * 1.5,
+                    y: (Math.random() - 0.5) * 1.5
+                });
+
+                anxietyBodies.push(body);
+                Composite.add(engine.world, body);
+            });
+        }
+
+        function setupMouseInteraction() {
+            mouse = Mouse.create(render.canvas);
+            mouseConstraint = MouseConstraint.create(engine, {
+                mouse,
+                constraint: {
+                    stiffness: 0.1,  // 4. より滑らかな追従
+                    damping: 0.1,
+                    render: { visible: false }
+                }
+            });
+            Composite.add(engine.world, mouseConstraint);
+            render.mouse = mouse;
+            mouse.element.removeEventListener('mousewheel', mouse.mousewheel);
+            mouse.element.removeEventListener('DOMMouseScroll', mouse.mousewheel);
+        }
+
+        function floatAnimation() {
+            if (isReleased) return;
+            anxietyBodies.forEach(body => {
+                const fx = (Math.random() - 0.5) * CONFIG.floatForce;
+                const fy = (Math.random() - 0.5) * CONFIG.floatForce;
+                Body.applyForce(body, body.position, { x: fx, y: fy });
+
+                const maxV = 1.8;
+                if (Math.abs(body.velocity.x) > maxV) Body.setVelocity(body, { x: Math.sign(body.velocity.x) * maxV, y: body.velocity.y });
+                if (Math.abs(body.velocity.y) > maxV) Body.setVelocity(body, { x: body.velocity.x, y: Math.sign(body.velocity.y) * maxV });
+
+                Body.applyForce(body, body.position, { x: 0, y: -0.00012 });
+            });
+        }
+
+        function setupCustomRendering() {
+            Events.on(render, 'afterRender', () => {
+                const ctx = render.context;
+                anxietyBodies.forEach(body => {
+                    const pos = body.position;
+                    const fontSize = body.circleRadius * 0.42;
+
+                    ctx.save();
+                    ctx.translate(pos.x, pos.y);
+                    ctx.rotate(body.angle);
+                    ctx.font = `400 ${fontSize}px 'Zen Kaku Gothic New', sans-serif`;
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(body.label, 0, 0);
+                    ctx.restore();
+                });
+            });
+        }
+
+        // ========================================
+        // 委ねる処理
+        // ========================================
+
+        function releaseAnxiety() {
+            if (isReleased) return;
+            isReleased = true;
+
+            yudaneBtn.classList.add('hidden');
+            title.classList.add('fade');
+
+            engine.gravity.y = CONFIG.gravityStrength;
+            anxietyBodies.forEach(body => {
+                Body.applyForce(body, body.position, { x: 0, y: 0.04 });
+            });
+
+            setTimeout(() => {
+                const rarity = drawRarity();
+                const message = rarity.prefix + generateOracle();
+                saveRitual(message, rarity);
+                currentRitual = { message, rarity };
+                showOracle(message, rarity);
+            }, 2800);
+        }
+
+        function showOracle(message, rarity) {
+            app.classList.remove('rarity-N', 'rarity-R', 'rarity-SR', 'rarity-SSR');
+            app.classList.add(`rarity-${rarity.name}`);
+
+            // SSR演出
+            if (rarity.name === 'SSR') {
+                ssrFlash.classList.add('active');
+                ssrExplosion.explode();
+                setTimeout(() => ssrFlash.classList.remove('active'), 1500);
+            }
+
+            rarityBadge.textContent = rarity.label;
+
+            // 神託メッセージ（適度に改行）
+            const formatted = message.replace(/([、。])/g, '$1<wbr>');
+            oracleMessage.innerHTML = formatted;
+
+            oracle.classList.add('visible');
+            nextRitual.classList.add('visible');
+            startCountdown();
+        }
+
+        function startCountdown() {
+            if (countdownInterval) clearInterval(countdownInterval);
+            const update = () => { countdown.textContent = formatTime(getTimeUntilMidnight()); };
+            update();
+            countdownInterval = setInterval(update, 1000);
+        }
+
+        // ========================================
+        // シェア
+        // ========================================
+
+        function shareToX() {
+            if (!currentRitual) return;
+            const { message, rarity } = currentRitual;
+            const r = rarity.name === 'N' ? '' : `[${rarity.name}] を引きました！\n`;
+            const text = encodeURIComponent(`${r}今日の神託：\n${message}\n\n#YUDANE - 完全なる委任`);
+            window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank', 'width=550,height=420');
+        }
+
+        // ========================================
+        // 初期化
+        // ========================================
+
+        async function init() {
+            // マリンスノー初期化
+            marineSnow = new MarineSnow(document.getElementById('marine-snow-canvas'));
+            ssrExplosion = new SSRParticleExplosion(document.getElementById('ssr-particles-canvas'));
+
+            const saved = loadRitual();
+
+            if (saved) {
+                currentRitual = saved;
+                title.classList.add('fade');
+                yudaneBtn.classList.add('hidden');
+                showOracle(saved.message, saved.rarity);
+            } else {
+                yudaneBtn.textContent = '読み込み中...';
+                yudaneBtn.disabled = true;
+
+                await generateAnxietyWords();
+                initPhysics();
+                setupCustomRendering();
+
+                yudaneBtn.textContent = '委ねる';
+                yudaneBtn.disabled = false;
+            }
+        }
+
+        // イベント
+        yudaneBtn.addEventListener('click', releaseAnxiety);
+        shareBtn.addEventListener('click', shareToX);
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+
+</html>
