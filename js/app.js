@@ -574,7 +574,8 @@ function drawRarity() {
 function generateOracle() {
     const excuse = LEXICON.excuses[Math.floor(Math.random() * LEXICON.excuses.length)];
     const permission = LEXICON.permissions[Math.floor(Math.random() * LEXICON.permissions.length)];
-    return `${excuse}${permission}`;
+    // 免罪符と許可の間に改行を入れる（「、」の後で自然に改行）
+    return `${excuse}\n${permission}`;
 }
 
 // ========================================

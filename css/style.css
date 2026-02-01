@@ -443,6 +443,8 @@ button:focus-visible {
     line-height: 2.2;
     letter-spacing: 0.12em;
     transition: all var(--transition-slow) ease;
+    white-space: pre-line;
+    /* 改行コードを認識 */
 }
 
 .rarity-N #oracle-message {
