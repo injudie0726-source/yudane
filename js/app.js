@@ -1543,7 +1543,7 @@ class YudaneApp {
         this.state.countdownInterval = setInterval(update, TIMING.COUNTDOWN_INTERVAL);
     }
 
-    shareToX() {
+    async shareToX() {
         if (!this.state.currentRitual) return;
         const { message, rarity } = this.state.currentRitual;
 
@@ -1553,9 +1553,10 @@ class YudaneApp {
             setTimeout(() => this.elements.ssrFlash.classList.remove('active'), TIMING.FLASH_DURATION);
         }
 
+        // シェアテキスト生成
         let tweetText;
         if (rarity.name === 'SSR') {
-            tweetText = `🌟✨ SSR神託を授かりました ✨🌟\n\n「${message}」\n\n運命の言葉を受け取りました。\n\n#YUDANE #SSR神託`;
+            tweetText = `🌟✨ SSR神託を授かりました ✨🌟\n\n「${message}」\n\n#YUDANE #SSR神託`;
         } else if (rarity.name === 'SR') {
             tweetText = `💜 SR神託を引きました！\n\n${message}\n\n#YUDANE`;
         } else if (rarity.name === 'R') {
@@ -1564,7 +1565,35 @@ class YudaneApp {
             tweetText = `今日の神託：\n${message}\n\n#YUDANE`;
         }
 
-        const url = window.location.origin + '/';
+        // 画像生成
+        if (!this.shareImageGenerator) {
+            this.shareImageGenerator = new ShareImageGenerator();
+        }
+        await document.fonts.ready;
+        const dataUrl = this.shareImageGenerator.generate(message, rarity);
+
+        // DataURL → File変換
+        const response = await fetch(dataUrl);
+        const blob = await response.blob();
+        const file = new File([blob], `yudane_${Date.now()}.png`, { type: 'image/png' });
+
+        // Web Share API対応チェック（モバイルで画像付きシェア）
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+                await navigator.share({
+                    files: [file],
+                    title: 'YUDANE - 今日の啓示',
+                    text: tweetText + '\n\nhttps://yudane.netlify.app'
+                });
+                return; // シェア成功
+            } catch (err) {
+                if (err.name === 'AbortError') return; // キャンセルは正常終了
+                console.warn('Share failed, falling back to Twitter intent:', err);
+            }
+        }
+
+        // フォールバック: X Intent URL（PCや非対応ブラウザ）
+        const url = 'https://yudane.netlify.app';
         const encoded = encodeURIComponent(tweetText);
         window.open(`https://twitter.com/intent/tweet?text=${encoded}&url=${encodeURIComponent(url)}`, '_blank', 'width=550,height=500');
     }
