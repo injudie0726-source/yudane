@@ -512,21 +512,128 @@ button:focus-visible {
 }
 
 /* ========================================
-   6. SSR Effects
+   6. Rarity Effects (パチンコ風演出)
    ======================================== */
+
+/* Screen Shake Animation */
+@keyframes screenShake {
+
+    0%,
+    100% {
+        transform: translate(0, 0);
+    }
+
+    10% {
+        transform: translate(-5px, -3px);
+    }
+
+    20% {
+        transform: translate(5px, 3px);
+    }
+
+    30% {
+        transform: translate(-4px, 2px);
+    }
+
+    40% {
+        transform: translate(4px, -2px);
+    }
+
+    50% {
+        transform: translate(-3px, 3px);
+    }
+
+    60% {
+        transform: translate(3px, -3px);
+    }
+
+    70% {
+        transform: translate(-2px, 2px);
+    }
+
+    80% {
+        transform: translate(2px, -2px);
+    }
+
+    90% {
+        transform: translate(-1px, 1px);
+    }
+}
+
+body.screen-shake {
+    animation: screenShake 0.6s ease-out;
+}
+
+/* Flash Element Base */
 #ssr-flash {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: radial-gradient(circle at center, rgba(255, 215, 0, 0.8), rgba(255, 165, 0, 0.4), transparent 70%);
     opacity: 0;
     pointer-events: none;
     z-index: 1000;
 }
 
-#ssr-flash.active {
+/* R: 軽い青白フラッシュ */
+#ssr-flash.active.r {
+    background: radial-gradient(circle at center, rgba(0, 229, 255, 0.4), rgba(100, 200, 255, 0.2), transparent 60%);
+    animation: rFlashAnim 0.6s ease-out forwards;
+}
+
+@keyframes rFlashAnim {
+    0% {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+
+    20% {
+        opacity: 0.7;
+        transform: scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(1.2);
+    }
+}
+
+/* SR: 紫フラッシュ + パルス */
+#ssr-flash.active.sr {
+    background: radial-gradient(circle at center, rgba(199, 125, 255, 0.6), rgba(150, 100, 200, 0.3), transparent 65%);
+    animation: srFlashAnim 1s ease-out forwards;
+}
+
+@keyframes srFlashAnim {
+    0% {
+        opacity: 0;
+        transform: scale(0.6);
+    }
+
+    15% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    30% {
+        opacity: 0.6;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.4;
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(1.3);
+    }
+}
+
+/* SSR: ゴールドフラッシュ + 爆発（最大演出） */
+#ssr-flash.active.ssr {
+    background: radial-gradient(circle at center, rgba(255, 215, 0, 0.9), rgba(255, 165, 0, 0.5), transparent 70%);
     animation: ssrFlashAnim 1.5s ease-out forwards;
 }
 

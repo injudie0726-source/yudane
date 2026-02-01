@@ -109,15 +109,15 @@ class SSRParticleExplosion {
         this.canvas.height = window.innerHeight;
     }
 
-    explode() {
+    explode(scale = 1) {
         this.particles = [];
         const centerX = this.canvas.width / 2;
         const centerY = this.canvas.height * 0.38;
-        const count = 100;
+        const count = Math.floor(100 * scale);
 
         for (let i = 0; i < count; i++) {
             const angle = (i / count) * Math.PI * 2 + Math.random() * 0.3;
-            const speed = 3 + Math.random() * 8;
+            const speed = (3 + Math.random() * 8) * scale;
             const size = 2 + Math.random() * 4;
 
             this.particles.push({
@@ -548,10 +548,10 @@ const LEXICON = {
 // 5. Rarity System
 // ========================================
 const RARITY = {
-    SSR: { name: 'SSR', label: '【啓示】', probability: 0.01 },
-    SR: { name: 'SR', label: '稀なる声', probability: 0.04 },
-    R: { name: 'R', label: '深き声', probability: 0.25 },
-    N: { name: 'N', label: '今日の一滴', probability: 0.70 }
+    SSR: { name: 'SSR', label: '★★★★', probability: 0.01 },
+    SR: { name: 'SR', label: '★★★', probability: 0.04 },
+    R: { name: 'R', label: '★★', probability: 0.25 },
+    N: { name: 'N', label: '★', probability: 0.70 }
 };
 
 /**
@@ -766,20 +766,56 @@ class YudaneApp {
         this.elements.app.classList.remove('rarity-N', 'rarity-R', 'rarity-SR', 'rarity-SSR');
         this.elements.app.classList.add(`rarity-${rarity.name}`);
 
-        if (rarity.name === 'SSR') {
-            this.elements.ssrFlash.classList.add('active');
-            this.ssrExplosion.explode();
-            setTimeout(() => this.elements.ssrFlash.classList.remove('active'), TIMING.FLASH_DURATION);
-        }
+        // レアリティ別演出（パチンコ風の射幸心演出）
+        this.playRarityEffect(rarity);
 
         this.elements.rarityBadge.textContent = rarity.label;
-
-        // Safe text insertion (XSS fix)
         this.elements.oracleMessage.textContent = message;
 
         this.elements.oracle.classList.add('visible');
         this.elements.nextRitual.classList.add('visible');
         this.startCountdown();
+    }
+
+    /**
+     * レアリティ別演出（N < R < SR < SSR）
+     * @param {{ name: string }} rarity
+     */
+    playRarityEffect(rarity) {
+        const flashEl = this.elements.ssrFlash;
+
+        switch (rarity.name) {
+            case 'SSR':
+                // SSR: 最大演出（フラッシュ+爆発+振動+スクリーンシェイク）
+                flashEl.classList.add('active', 'ssr');
+                this.ssrExplosion.explode();
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
+                document.body.classList.add('screen-shake');
+                setTimeout(() => {
+                    flashEl.classList.remove('active', 'ssr');
+                    document.body.classList.remove('screen-shake');
+                }, TIMING.FLASH_DURATION);
+                break;
+
+            case 'SR':
+                // SR: フラッシュ+軽い振動+パーティクル少なめ
+                flashEl.classList.add('active', 'sr');
+                this.ssrExplosion.explode(0.5); // 50%の規模
+                if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
+                setTimeout(() => flashEl.classList.remove('active', 'sr'), 1000);
+                break;
+
+            case 'R':
+                // R: 軽いフラッシュのみ
+                flashEl.classList.add('active', 'r');
+                if (navigator.vibrate) navigator.vibrate([50]);
+                setTimeout(() => flashEl.classList.remove('active', 'r'), 600);
+                break;
+
+            default:
+                // N: 演出なし（静かに表示）
+                break;
+        }
     }
 
     startCountdown() {
