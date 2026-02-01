@@ -660,13 +660,40 @@ class ShareImageGenerator {
     }
 
     /**
-     * Download generated image
+     * Download generated image (Web Share API対応)
+     * iOS/Androidでシェアシートから「画像を保存」可能
      * @param {string} message - Oracle message
      * @param {{ name: string, label: string }} rarity - Rarity object
      */
     async download(message, rarity) {
         await document.fonts.ready;
         const dataUrl = this.generate(message, rarity);
+
+        // DataURL → Blob変換
+        const response = await fetch(dataUrl);
+        const blob = await response.blob();
+        const file = new File([blob], `yudane_${Date.now()}.png`, { type: 'image/png' });
+
+        // Web Share API対応チェック（iOS Safari/Android Chrome）
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+                await navigator.share({
+                    files: [file],
+                    title: 'YUDANE - 今日の啓示',
+                    text: '今日の啓示をシェア'
+                });
+                return; // シェア成功
+            } catch (err) {
+                // ユーザーがキャンセルした場合など
+                if (err.name !== 'AbortError') {
+                    console.warn('Share failed, falling back to download:', err);
+                } else {
+                    return; // キャンセルは正常終了
+                }
+            }
+        }
+
+        // フォールバック: 従来のダウンロード方式（PC/非対応ブラウザ）
         const link = document.createElement('a');
         link.href = dataUrl;
         link.download = `yudane_${Date.now()}.png`;
