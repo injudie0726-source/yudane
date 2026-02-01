@@ -810,6 +810,7 @@ class YudaneApp {
         this.elements = {
             app: document.getElementById('app'),
             container: document.getElementById('canvas-container'),
+            buttonContainer: document.getElementById('button-container'),
             yudaneBtn: document.getElementById('yudane-btn'),
             oracle: document.getElementById('oracle'),
             oracleMessage: document.getElementById('oracle-message'),
@@ -903,7 +904,7 @@ class YudaneApp {
         if (saved) {
             this.state.currentRitual = saved;
             this.elements.title.classList.add('fade');
-            this.elements.yudaneBtn.classList.add('hidden');
+            this.elements.buttonContainer.classList.add('hidden');
             this.showOracle(saved.message, saved.rarity);
         } else {
             this.elements.yudaneBtn.textContent = '読み込み中...';
@@ -927,7 +928,7 @@ class YudaneApp {
         if (this.state.isReleased) return;
         this.state.isReleased = true;
 
-        this.elements.yudaneBtn.classList.add('hidden');
+        this.elements.buttonContainer.classList.add('hidden');
         this.elements.title.classList.add('fade');
 
         this.state.engine.gravity.y = this.config.gravityStrength;
