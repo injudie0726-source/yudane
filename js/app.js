@@ -859,8 +859,6 @@ class YudaneApp {
                 '炎上', '批判', '事故', '被害', '悪化', '懸念'
             ],
             anxietySuffixes: ['しなきゃ', 'どうする？', 'やばい', '怖い', '無理'],
-            newsFeeds: ['https://news.yahoo.co.jp/rss/topics/top-picks.xml'],
-            rss2jsonApi: 'https://api.rss2json.com/v1/api.json?rss_url=',
             anxietyWords: [],
             colors: [
                 'rgba(80, 120, 180, 0.6)',
@@ -910,7 +908,7 @@ class YudaneApp {
             this.elements.yudaneBtn.textContent = '読み込み中...';
             this.elements.yudaneBtn.disabled = true;
 
-            await this.generateAnxietyWords();
+            this.generateAnxietyWords();
             this.initPhysics();
             this.setupCustomRendering();
 
@@ -941,6 +939,18 @@ class YudaneApp {
             const message = generateOracle(rarity);
             saveRitual(message, rarity);
             this.state.currentRitual = { message, rarity };
+
+            // GA4: レアリティイベント送信
+            if (typeof gtag === 'function') {
+                gtag('event', 'oracle_revealed', {
+                    rarity: rarity.name,
+                    rarity_label: rarity.label
+                });
+            }
+
+            // 効果音再生
+            this.playRaritySound(rarity);
+
             this.showOracle(message, rarity);
         }, TIMING.GRAVITY_SETTLE);
     }
@@ -999,6 +1009,70 @@ class YudaneApp {
                 // N: 演出なし（静かに表示）
                 break;
         }
+    }
+
+    /**
+     * レアリティ別効果音再生（Web Audio APIシンセサイズ）
+     */
+    playRaritySound(rarity) {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+            switch (rarity.name) {
+                case 'SSR':
+                    // SSR: 豪華なファンファーレ（上昇音+和音）
+                    this.playTone(ctx, 523.25, 0, 0.15, 0.3);   // C5
+                    this.playTone(ctx, 659.25, 0.1, 0.15, 0.3); // E5
+                    this.playTone(ctx, 783.99, 0.2, 0.15, 0.3); // G5
+                    this.playTone(ctx, 1046.50, 0.3, 0.4, 0.4); // C6
+                    // キラキラ音
+                    this.playTone(ctx, 2093, 0.5, 0.1, 0.15);
+                    this.playTone(ctx, 2349, 0.6, 0.1, 0.15);
+                    this.playTone(ctx, 2637, 0.7, 0.15, 0.2);
+                    break;
+
+                case 'SR':
+                    // SR: 上昇音（3音）
+                    this.playTone(ctx, 440, 0, 0.12, 0.2);     // A4
+                    this.playTone(ctx, 554.37, 0.1, 0.12, 0.2); // C#5
+                    this.playTone(ctx, 659.25, 0.2, 0.2, 0.25); // E5
+                    break;
+
+                case 'R':
+                    // R: 軽い上昇音（2音）
+                    this.playTone(ctx, 392, 0, 0.1, 0.15);     // G4
+                    this.playTone(ctx, 523.25, 0.08, 0.15, 0.18); // C5
+                    break;
+
+                default:
+                    // N: 控えめな単音
+                    this.playTone(ctx, 349.23, 0, 0.15, 0.12); // F4
+                    break;
+            }
+        } catch (e) {
+            // Audio context not supported
+        }
+    }
+
+    /**
+     * 単音再生ヘルパー
+     */
+    playTone(ctx, frequency, delay, duration, volume = 0.2) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.value = frequency;
+
+        gain.gain.setValueAtTime(0, ctx.currentTime + delay);
+        gain.gain.linearRampToValueAtTime(volume, ctx.currentTime + delay + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + duration);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(ctx.currentTime + delay);
+        osc.stop(ctx.currentTime + delay + duration + 0.1);
     }
 
     startCountdown() {
@@ -1086,38 +1160,9 @@ class YudaneApp {
     }
 
     // Physics methods
-    async generateAnxietyWords() {
-        const news = await this.fetchNewsKeywords();
-        if (news.length >= 4) {
-            const phrases = news.map(k => Math.random() > 0.5 ?
-                k + this.config.anxietySuffixes[Math.floor(Math.random() * this.config.anxietySuffixes.length)] : k);
-            const mixed = [...phrases.slice(0, 8), ...this.config.fallbackWords.slice(0, 7)];
-            this.config.anxietyWords = mixed.sort(() => Math.random() - 0.5);
-        } else {
-            this.config.anxietyWords = [...this.config.fallbackWords];
-        }
-    }
-
-    async fetchNewsKeywords() {
-        const keywords = new Set();
-        try {
-            const res = await fetch(this.config.rss2jsonApi + encodeURIComponent(this.config.newsFeeds[0]));
-            const data = await res.json();
-            if (data.status === 'ok' && data.items) {
-                data.items.forEach(item => {
-                    this.config.anxietyPatterns.forEach(p => {
-                        if (item.title.includes(p)) keywords.add(p);
-                    });
-                    const katakana = item.title.match(/[ァ-ヶー]{2,6}/g);
-                    if (katakana) katakana.forEach(k => {
-                        if (!['ニュース', 'トップ'].includes(k)) keywords.add(k);
-                    });
-                });
-            }
-        } catch (e) {
-            console.warn('News fetch failed:', e.message);
-        }
-        return Array.from(keywords);
+    generateAnxietyWords() {
+        // フォールバックワードをシャッフルして使用
+        this.config.anxietyWords = [...this.config.fallbackWords].sort(() => Math.random() - 0.5);
     }
 
     getCanvasSize() {
