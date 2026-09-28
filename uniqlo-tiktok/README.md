@@ -4,10 +4,13 @@
 
 ## 読む順番
 
+0. **`HANDOFF.md`** — PC上のローカルセッションへの引き継ぎメモ（次にやること・注意点）
+
 1. **`ユニクロTikTok戦略提案_v1.md`** — TORIHADA向けの本命資料（方向性・ターゲット・4本柱・アイデア36本・KPI・7人体制・90日検証・論点）
 2. `reports/ユニクロ TikTok 戦略リサーチ.md` — 6本の調査を統合したリサーチレポート（出典付き）
 3. `他AIへの質問文.md` — ChatGPT（Astra）／Grok／Gemini／他Claudeにそのまま貼る質問文
 4. `research_notes/ユニクロ TikTok 戦略リサーチ/` — 調査ノート原本（各URL付き）
+5. `vcon/` — Vコン（HTMLアニマティック→動画）。`out/*.webm` が動画、`out/*_sheet.png` が絵コンテ表
 
 ## 注意
 

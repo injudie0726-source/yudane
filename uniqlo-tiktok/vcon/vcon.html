@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1080, initial-scale=1">
+<title>Vコン</title>
+<style>
+@font-face{font-family:"NotoJP";font-weight:400;src:url("./fonts/noto-sans-jp-japanese-400-normal.woff2") format("woff2");}
+@font-face{font-family:"NotoJP";font-weight:700;src:url("./fonts/noto-sans-jp-japanese-700-normal.woff2") format("woff2");}
+@font-face{font-family:"NotoJP";font-weight:900;src:url("./fonts/noto-sans-jp-japanese-900-normal.woff2") format("woff2");}
+:root{
+  --w:1080px;--h:1920px;
+  --ink:#111;--paper:#fff;--red:#e60012;--yellow:#ffe14d;--muted:#6b6b6b;
+}
+html,body{margin:0;padding:0;background:#000;}
+body{width:var(--w);height:var(--h);overflow:hidden;font-family:"NotoJP","IPAGothic","WenQuanYi Zen Hei",sans-serif;color:var(--ink);position:relative;}
+#stage{position:absolute;inset:0;background:#f4f4f4;transition:background .4s ease;}
+/* progress */
+#prog{position:absolute;top:36px;left:40px;right:40px;display:flex;gap:8px;z-index:20;}
+#prog span{flex:1;height:8px;border-radius:4px;background:rgba(0,0,0,.18);overflow:hidden;position:relative;}
+#prog span i{position:absolute;inset:0;width:0;background:var(--ink);}
+#prog span.done i{width:100%;}
+#meta{position:absolute;top:60px;left:40px;right:40px;display:flex;justify-content:space-between;font-size:26px;color:var(--muted);z-index:20;font-weight:700;letter-spacing:.02em;}
+/* footage placeholder */
+#footage{position:absolute;left:60px;right:60px;top:280px;height:740px;border:6px dashed rgba(0,0,0,.28);border-radius:36px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;background:rgba(255,255,255,.55);transition:opacity .3s;}
+#footage .icon{font-size:220px;line-height:1;filter:grayscale(.1);}
+#footage .note{font-size:34px;color:#333;background:rgba(0,0,0,.06);padding:14px 28px;border-radius:14px;max-width:880px;text-align:center;line-height:1.45;}
+#footage .tag{position:absolute;top:-24px;left:40px;background:#333;color:#fff;font-size:26px;padding:8px 20px;border-radius:12px;font-weight:700;}
+/* telop */
+#telop{position:absolute;left:60px;right:60px;top:1060px;text-align:center;font-weight:900;font-size:92px;line-height:1.18;letter-spacing:-.01em;color:var(--ink);text-shadow:0 0 0 #000;opacity:0;transform:translateY(20px);transition:opacity .25s,transform .25s;}
+#telop.show{opacity:1;transform:none;}
+#telop .hl{color:var(--red);}
+#telop .small{display:block;font-size:52px;font-weight:700;color:#333;margin-top:14px;}
+#telop.big{top:560px;font-size:120px;}
+/* stickers */
+#stickers{position:absolute;left:60px;right:60px;top:1230px;display:flex;gap:24px;justify-content:center;flex-wrap:wrap;opacity:0;transition:opacity .25s;}
+#stickers.show{opacity:1;}
+.stk{background:var(--ink);color:#fff;font-weight:900;font-size:56px;padding:22px 40px;border-radius:999px;}
+.stk.red{background:var(--red);}
+.stk.yel{background:var(--yellow);color:var(--ink);}
+.stk.wh{background:#fff;color:var(--ink);border:6px solid var(--ink);}
+/* bars */
+#bars{position:absolute;left:100px;right:100px;top:1230px;display:none;flex-direction:column;gap:26px;}
+#bars.show{display:flex;}
+.bar{display:flex;align-items:center;gap:24px;font-weight:900;font-size:48px;}
+.bar .lab{width:220px;text-align:right;}
+.bar .trk{flex:1;height:64px;background:rgba(0,0,0,.08);border-radius:14px;overflow:hidden;}
+.bar .trk i{display:block;height:100%;width:0;background:var(--red);transition:width 1.2s cubic-bezier(.2,.8,.2,1);}
+.bar .val{width:200px;}
+/* two columns */
+#cols{position:absolute;left:60px;right:60px;top:1230px;display:none;gap:24px;}
+#cols.show{display:flex;}
+.col{flex:1;background:#fff;border-radius:28px;padding:34px 30px;border:6px solid var(--ink);}
+.col h3{margin:0 0 18px;font-size:44px;font-weight:900;color:var(--red);}
+.col p{margin:0;font-size:40px;font-weight:700;line-height:1.4;}
+/* lower third */
+#lt{position:absolute;left:60px;bottom:270px;background:#fff;border-radius:20px;padding:18px 28px;font-size:34px;font-weight:700;border:4px solid var(--ink);opacity:0;transition:opacity .3s;max-width:760px;line-height:1.35;}
+#lt.show{opacity:1;}
+#lt small{display:block;font-size:24px;color:var(--muted);font-weight:400;margin-top:4px;}
+/* subtitle */
+#sub{position:absolute;left:60px;right:60px;bottom:110px;text-align:center;font-size:44px;font-weight:700;line-height:1.4;color:#fff;background:rgba(0,0,0,.82);padding:22px 30px;border-radius:20px;opacity:0;transition:opacity .2s;}
+#sub.show{opacity:1;}
+#sub b{color:var(--yellow);}
+/* end card */
+#endcard{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:40px;background:var(--red);color:#fff;text-align:center;padding:80px;}
+#endcard.show{display:flex;}
+#endcard h1{font-size:120px;font-weight:900;margin:0;line-height:1.15;}
+#endcard p{font-size:52px;font-weight:700;margin:0;opacity:.95;}
+#endcard .hash{font-size:60px;font-weight:900;background:#fff;color:var(--red);padding:20px 50px;border-radius:999px;}
+/* watermark */
+#wm{position:absolute;right:40px;bottom:40px;font-size:24px;color:rgba(0,0,0,.45);font-weight:700;z-index:30;}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div id="prog"></div>
+<div id="meta"><span id="metaL"></span><span id="metaR"></span></div>
+<div id="footage"><span class="tag">撮影メモ（実写に置き換え）</span><div class="icon"></div><div class="note"></div></div>
+<div id="telop"></div>
+<div id="stickers"></div>
+<div id="bars"></div>
+<div id="cols"></div>
+<div id="lt"></div>
+<div id="sub"></div>
+<div id="endcard"></div>
+<div id="wm">Vコン v0.1 / 実写・音声は仮</div>
+<script>
+(function(){
+  const q = new URLSearchParams(location.search);
+  const name = q.get('sb') || 'gokudan';
+  const still = q.get('still'); // cut index to freeze on (for storyboard stills)
+  const s = document.createElement('script');
+  s.src = './sb/' + name + '.js';
+  s.onload = () => run(window.SB, still === null ? null : parseInt(still,10));
+  document.head.appendChild(s);
+
+  const $ = id => document.getElementById(id);
+  function setHTML(el, html){ el.innerHTML = html || ''; }
+
+  function applyCut(c, idx, sb){
+    $('stage').style.background = c.bg || '#f4f4f4';
+    // footage
+    const f = $('footage');
+    if (c.footage === false){ f.style.opacity = 0; } else {
+      f.style.opacity = 1;
+      f.querySelector('.icon').textContent = c.icon || '🎬';
+      f.querySelector('.note').textContent = c.scene || '';
+    }
+    // telop
+    const t = $('telop');
+    t.className = c.telopBig ? 'big' : '';
+    setHTML(t, c.telop);
+    if (c.telop) requestAnimationFrame(()=>t.classList.add('show'));
+    // stickers
+    const st = $('stickers');
+    st.className = '';
+    setHTML(st, (c.stickers||[]).map(x=>`<span class="stk ${x.cls||''}">${x.text}</span>`).join(''));
+    if (c.stickers && c.stickers.length) requestAnimationFrame(()=>st.classList.add('show'));
+    // bars
+    const b = $('bars');
+    b.className = '';
+    setHTML(b, (c.bars||[]).map(x=>`<div class="bar"><span class="lab">${x.label}</span><span class="trk"><i data-w="${x.pct}"></i></span><span class="val">${x.val}</span></div>`).join(''));
+    if (c.bars){ b.classList.add('show'); setTimeout(()=>b.querySelectorAll('i').forEach(i=>i.style.width=i.dataset.w+'%'), 80); }
+    // cols
+    const co = $('cols');
+    co.className = '';
+    setHTML(co, (c.cols||[]).map(x=>`<div class="col"><h3>${x.h}</h3><p>${x.p}</p></div>`).join(''));
+    if (c.cols) co.classList.add('show');
+    // lower third
+    const lt = $('lt');
+    lt.className = '';
+    setHTML(lt, c.lt);
+    if (c.lt) requestAnimationFrame(()=>lt.classList.add('show'));
+    // subtitle
+    const sub = $('sub');
+    sub.className = '';
+    setHTML(sub, c.sub);
+    if (c.sub) requestAnimationFrame(()=>sub.classList.add('show'));
+    // end card
+    const ec = $('endcard');
+    ec.className = '';
+    setHTML(ec, c.endcard);
+    if (c.endcard) ec.classList.add('show');
+    // meta
+    $('metaL').textContent = sb.title;
+    $('metaR').textContent = `CUT ${idx+1}/${sb.cuts.length}  ${fmt(c._start)}–${fmt(c._start + c.dur)}`;
+    // progress
+    document.querySelectorAll('#prog span').forEach((sp,i)=>{
+      sp.classList.toggle('done', i < idx);
+      const bar = sp.querySelector('i');
+      if (i === idx){ bar.style.transition = 'none'; bar.style.width='0'; requestAnimationFrame(()=>{ bar.style.transition = `width ${c.dur}s linear`; bar.style.width='100%'; }); }
+      else if (i > idx){ bar.style.transition='none'; bar.style.width='0'; }
+    });
+  }
+  function fmt(s){ return s.toFixed(1).replace(/\.0$/,'') + 's'; }
+
+  function run(sb, still){
+    let t = 0;
+    sb.cuts.forEach(c => { c._start = t; t += c.dur; });
+    window.__total = t;
+    $('prog').innerHTML = sb.cuts.map(()=>'<span><i></i></span>').join('');
+    if (still !== null){
+      const c = sb.cuts[Math.min(still, sb.cuts.length-1)];
+      applyCut(c, Math.min(still, sb.cuts.length-1), sb);
+      setTimeout(()=>{ document.querySelectorAll('#bars i').forEach(i=>{i.style.transition='none';i.style.width=i.dataset.w+'%';}); window.__ready = true; }, 400);
+      return;
+    }
+    let i = 0;
+    function next(){
+      if (i >= sb.cuts.length){ window.__done = true; return; }
+      const c = sb.cuts[i];
+      applyCut(c, i, sb);
+      i++;
+      setTimeout(next, c.dur*1000);
+    }
+    document.fonts.ready.then(()=>{ window.__started = true; next(); });
+  }
+})();
+</script>
+</body>
+</html>
